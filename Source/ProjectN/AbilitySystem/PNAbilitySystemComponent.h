@@ -17,4 +17,6 @@ class PROJECTN_API UPNAbilitySystemComponent : public UAbilitySystemComponent
 public:
 	void AbilityInputPressed(FGameplayTag InputTag);
 	void AbilityInputReleased(FGameplayTag InputTag);
+	
+	FGameplayEffectSpecHandle MakeOutgoingSpecByGameplayEffect(UGameplayEffect* GameplayEffect, float Level, FGameplayEffectContextHandle Context) const;
 };

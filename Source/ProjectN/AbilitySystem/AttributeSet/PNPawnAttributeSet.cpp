@@ -7,29 +7,33 @@
 #include "PNGameplayTags.h"
 
 UPNPawnAttributeSet::UPNPawnAttributeSet()
-	: MaxHealth(100.0f)
+	: MaxHp(100.0f)
 {
-	InitHealth(GetMaxHealth());
-}
-
-bool UPNPawnAttributeSet::PreGameplayEffectExecute(struct FGameplayEffectModCallbackData& Data)
-{
-	return true;
+	InitHp(GetMaxHp());
 }
 
 void UPNPawnAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData& Data)
 {
 	if (Data.EvaluatedData.Attribute == GetDamageAttribute())
 	{
-		SetHealth(FMath::Clamp(GetHealth() - GetDamage(), 0.0f, GetMaxHealth()));
+		SetHp(FMath::Clamp(GetHp() - GetDamage(), 0.0f, GetMaxHp()));
 		SetDamage(0.0f);
 	}
-
-	if (GetHealth() <= 0.0f && bOutOfHealth == false)
+	else if (Data.EvaluatedData.Attribute == GetPowerAttribute())
 	{
-		bOutOfHealth = true;
-		
-		Data.Target.AddLooseGameplayTag(FPNGameplayTags::Get().Status_Dead);
-		OnOutOfHealth.Broadcast();
+		if (GetPower() < 0.0f)
+		{
+			SetHp(0.0f);
+		}
 	}
+
+	if (GetHp() <= 0.0f && bOutOfHp == false)
+	{
+		bOutOfHp = true;
+
+		Data.Target.AddLooseGameplayTag(FPNGameplayTags::Get().Status_Dead);
+		OnOutOfHp.Broadcast();
+	}
+	
+	OnChangedPawnAttributeDelegate.Broadcast(Data.EvaluatedData.Attribute);
 }

@@ -9,6 +9,7 @@
 #include "Component/PNPlayerInputComponent.h"
 #include "AbilitySystem/PNAbilitySet.h"
 #include "AbilitySystem/PNAbilitySystemComponent.h"
+#include "Component/PNEquipmentComponent.h"
 #include "Component/PNInventoryComponent.h"
 #include "Player/PNPlayerState.h"
 
@@ -19,6 +20,7 @@ APNCharacterPlayer::APNCharacterPlayer(const FObjectInitializer& ObjectInitializ
 
 	PNPlayerInputComponent = CreateDefaultSubobject<UPNPlayerInputComponent>(TEXT("PlayerInputComponent"));
 	CreateDefaultSubobject<UPNInventoryComponent>(TEXT("InventoryComponent"));
+	CreateDefaultSubobject<UPNEquipmentComponent>(TEXT("EquipmentComponent"));
 }
 
 void APNCharacterPlayer::PossessedBy(AController* NewController)

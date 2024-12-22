@@ -13,14 +13,16 @@ UCLASS(config=Game)
 class APNCharacter : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
-
-protected:
-	APNCharacter(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 	
 public:
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override final;
 	
+	bool IsPlayer() const;
+	
 	bool IsIdle() const;
+
+protected:
+	APNCharacter(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 	
 protected:
 	UPROPERTY(EditAnywhere)

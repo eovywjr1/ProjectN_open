@@ -45,3 +45,19 @@ void UPNAbilitySystemComponent::AbilityInputReleased(FGameplayTag InputTag)
 		}
 	}
 }
+
+FGameplayEffectSpecHandle UPNAbilitySystemComponent::MakeOutgoingSpecByGameplayEffect(UGameplayEffect* GameplayEffect, float Level, FGameplayEffectContextHandle Context) const
+{
+	if (Context.IsValid() == false)
+	{
+		Context = MakeEffectContext();
+	}
+
+	if (GameplayEffect)
+	{
+		FGameplayEffectSpec* NewSpec = new FGameplayEffectSpec(GameplayEffect, Context, Level);
+		return FGameplayEffectSpecHandle(NewSpec);
+	}
+
+	return FGameplayEffectSpecHandle(nullptr);
+}

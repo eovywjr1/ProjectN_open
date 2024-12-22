@@ -21,6 +21,6 @@ void APNCharacterNonPlayer::PossessedBy(AController* NewController)
 
 	if (UPNAbilitySystemComponent* AbilitySystemComponent = PawnComponent->GetAbilitySystemComponent())
 	{
-		AbilitySystemComponent->InitAbilityActorInfo(this, this);
+		AbilitySystemComponent->InitAbilityActorInfo(NewController, this);
 	}
 }

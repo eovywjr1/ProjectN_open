@@ -11,6 +11,8 @@
 /**
  * 
  */
+ 
+// Todo. WeaponData 혹은 EquipmentData로 변경해야 함
 UCLASS()
 class PROJECTN_API UPNWeaponAttributeSet : public UPNAttributeSet
 {

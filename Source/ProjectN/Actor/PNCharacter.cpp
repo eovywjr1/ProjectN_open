@@ -46,6 +46,16 @@ UAbilitySystemComponent* APNCharacter::GetAbilitySystemComponent() const
 	return PawnComponent->GetAbilitySystemComponent();
 }
 
+bool APNCharacter::IsPlayer() const
+{
+	if (Controller == nullptr)
+	{
+		return false;
+	}
+	
+	return Controller->IsPlayerController();
+}
+
 bool APNCharacter::IsIdle() const
 {
 	UCharacterMovementComponent* CharacterMovementComponent = GetCharacterMovement();

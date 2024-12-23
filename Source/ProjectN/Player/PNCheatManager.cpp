@@ -4,6 +4,9 @@
 #include "Player/PNCheatManager.h"
 
 #include "PNLogChannels.h"
+#include "AbilitySystem/PNAbilitySystemComponent.h"
+#include "AbilitySystem/AttributeSet/PNPawnAttributeSet.h"
+#include "Actor/PNCharacter.h"
 #include "Component/PNInventoryComponent.h"
 
 void UPNCheatManager::AddItem(FName ItemKey, const uint8 Count)
@@ -31,4 +34,29 @@ void UPNCheatManager::AddItem(FName ItemKey, const uint8 Count)
 	check(Inventory);
 
 	Inventory->RequestAddItem(ItemKey, Count);
+}
+
+void UPNCheatManager::DecreasePlayerHp(const uint16 Amount)
+{
+	if (Amount <= 0.0f)
+	{
+		UE_LOG(LogPN, Warning, TEXT("DecreasePlayerHp Amount(%d)가 0보다 커야 합니다."), Amount);
+		return;
+	}
+	
+	UGameplayEffect* DamageEffect = NewObject<UGameplayEffect>(this, FName(TEXT("DamageEffect")));
+	DamageEffect->DurationPolicy = EGameplayEffectDurationType::Instant;
+
+	FGameplayModifierInfo StatusModifierInfo;
+	StatusModifierInfo.Attribute = UPNPawnAttributeSet::GetDamageAttribute();
+	StatusModifierInfo.ModifierMagnitude = FGameplayEffectModifierMagnitude(FScalableFloat(Amount));
+	DamageEffect->Modifiers.Add(StatusModifierInfo);
+
+	APNCharacter* Player = GetPlayerController()->GetPawn<APNCharacter>();
+	UPNAbilitySystemComponent* AbilitySystemComponent = Cast<UPNAbilitySystemComponent>(Player->GetAbilitySystemComponent());
+	FGameplayEffectContextHandle EffectContextHandle = AbilitySystemComponent->MakeEffectContext();
+	EffectContextHandle.AddSourceObject(Player);
+
+	FGameplayEffectSpecHandle EffectSpecHandle = AbilitySystemComponent->MakeOutgoingSpecByGameplayEffect(DamageEffect, 0, EffectContextHandle);
+	AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*EffectSpecHandle.Data.Get());
 }

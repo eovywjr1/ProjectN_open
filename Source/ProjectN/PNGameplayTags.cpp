@@ -25,12 +25,12 @@ void FPNGameplayTags::AddAllTags(UGameplayTagsManager& Manager)
 	AddTag(InputTag_LockOn, TEXT("InputTag.LockOn"), TEXT("LockOn input."));
 	AddTag(InputTag_EnableLockOn, TEXT("InputTag.EnableLockOn"), TEXT("EnableLockOn input."));
 
-	AddTag(Status_Idle, TEXT("Status.Idle"), TEXT("Status Idle"));
 	AddTag(Status_Dead, TEXT("Status.Dead"), TEXT("Status Dead"));
 	AddTag(Status_Peace, TEXT("Status.Peace"), TEXT("Status Peace"));
 	AddTag(Status_Fight, TEXT("Status.Fight"), TEXT("Status Fight"));
 	
 	AddTag(Action, TEXT("Action"), TEXT("Action"));
+	AddTag(Action_Idle, TEXT("Action.Idle"), TEXT("Action Idle"));
 	AddTag(Action_Jump, TEXT("Action.Jump"), TEXT("Action Jump"));
 	AddTag(Action_Move, TEXT("Action.Move"), TEXT("Action Move"));
 	AddTag(Action_Run, TEXT("Action.Run"), TEXT("Action Run"));

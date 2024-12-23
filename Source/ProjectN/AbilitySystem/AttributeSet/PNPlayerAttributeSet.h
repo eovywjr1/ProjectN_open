@@ -14,7 +14,15 @@ class PROJECTN_API UPNPlayerAttributeSet : public UPNPawnAttributeSet
 {
 	GENERATED_BODY()
 	
+public:
+	ATTRIBUTE_ACCESSORS(UPNPlayerAttributeSet, RegenerationHpRate);
+	
 private:
+	UPNPlayerAttributeSet();
+
 	virtual void PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData &Data) override final;
 	
+private:
+	UPROPERTY()
+	FGameplayAttributeData RegenerationHpRate;
 };

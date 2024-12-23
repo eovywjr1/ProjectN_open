@@ -23,7 +23,6 @@ private:
 	UPNPlayerInputComponent(const FObjectInitializer& ObjectInitializer);
 
 	virtual void BeginPlay() override final;
-	virtual void DestroyComponent(bool bPromoteChildren) override final;
 	
 public:
 	void InitializePlayerInput(UInputComponent* PlayerInputComponent);
@@ -39,11 +38,6 @@ private:
 	void Input_AbilityPressed(FGameplayTag InputTag);
 	void Input_AbilityReleased(FGameplayTag InputTag);
 	
-	void OnUpdateActionTag(const FGameplayTag GameplayTag, int32 Count) const;
-	
-	UFUNCTION()
-	void OnMovementUpdated(float DeltaSeconds, FVector OldLocation, FVector OldVelocity);
-	
 private:
 	UPROPERTY(EditDefaultsOnly, Category = Input)
 	TObjectPtr<class UInputMappingContext> DefaultMappingContext;
@@ -54,6 +48,4 @@ private:
 	FVector2D LastMovementInput;
 	
 	bool bIsEnableLockOn = true;
-	
-	FDelegateHandle OnActionTagDelegateHandle;
 };

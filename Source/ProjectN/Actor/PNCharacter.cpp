@@ -3,17 +3,17 @@
 #include "PNCharacter.h"
 
 #include "AbilitySystem/PNAbilitySystemComponent.h"
+#include "Component/PNCharacterMovementComponent.h"
 #include "Component/PNPawnComponent.h"
 #include "Component/PNStatusActorComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
-#include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 
 //////////////////////////////////////////////////////////////////////////
 
 APNCharacter::APNCharacter(const FObjectInitializer& ObjectInitializer)
-	: ACharacter(ObjectInitializer)
+	: Super(ObjectInitializer.SetDefaultSubobjectClass<UPNCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
@@ -54,22 +54,4 @@ bool APNCharacter::IsPlayer() const
 	}
 	
 	return Controller->IsPlayerController();
-}
-
-bool APNCharacter::IsIdle() const
-{
-	UCharacterMovementComponent* CharacterMovementComponent = GetCharacterMovement();
-	check(CharacterMovementComponent);
-
-	if (const bool bIsMoving = CharacterMovementComponent->Velocity.IsNearlyZero() == false)
-	{
-		return false;
-	}
-
-	if (CharacterMovementComponent->IsFalling())
-	{
-		return false;
-	}
-
-	return true;
 }

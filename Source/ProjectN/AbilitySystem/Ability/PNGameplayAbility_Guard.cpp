@@ -16,7 +16,7 @@ UPNGameplayAbility_Guard::UPNGameplayAbility_Guard()
 	
 	ActivationOwnedTags.AddTag(GameplayTags.Action_Guard);
 	ActivationRequiredTags.AddTag(GameplayTags.Status_Fight);
-	ActivationRequiredTags.AddTag(GameplayTags.Status_Idle);
+	ActivationRequiredTags.AddTag(GameplayTags.Action_Idle);
 }
 
 void UPNGameplayAbility_Guard::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)

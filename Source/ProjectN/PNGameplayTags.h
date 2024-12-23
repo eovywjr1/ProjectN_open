@@ -31,12 +31,12 @@ public:
 	FGameplayTag InputTag_LockOn;
 	FGameplayTag InputTag_EnableLockOn;
 
-	FGameplayTag Status_Idle;
 	FGameplayTag Status_Dead;
 	FGameplayTag Status_Peace;
 	FGameplayTag Status_Fight;
 	
 	FGameplayTag Action;
+	FGameplayTag Action_Idle;
 	FGameplayTag Action_Jump;
 	FGameplayTag Action_Move;
 	FGameplayTag Action_Run;

@@ -17,4 +17,7 @@ class PROJECTN_API UPNCheatManager : public UCheatManager
 public:
 	UFUNCTION(Exec)
 	void AddItem(FName ItemKey, const uint8 Count = 1);
+	
+	UFUNCTION(Exec)
+	void DecreasePlayerHp(const uint16 Amount);
 };

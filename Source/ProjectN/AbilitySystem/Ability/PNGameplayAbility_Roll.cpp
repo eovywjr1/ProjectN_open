@@ -6,6 +6,7 @@
 #include "PNGameplayTags.h"
 #include "PNLogChannels.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
+#include "Actor/PNCharacterPlayer.h"
 #include "Component/PNPlayerInputComponent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -25,20 +26,11 @@ void UGameplayAbilityTask_RollMove::Activate()
 {
 	Super::Activate();
 
-	bTickingTask = true;
-}
-
-void UGameplayAbilityTask_RollMove::TickTask(float DeltaTime)
-{
-	ACharacter* Avatar = CastChecked<ACharacter>(GetAvatarActor());
+	APNCharacterPlayer* Avatar = Cast<APNCharacterPlayer>(GetAvatarActor());
+	check(Avatar);
+	
 	const UPNPlayerInputComponent* PlayerInputComponent = Avatar->FindComponentByClass<UPNPlayerInputComponent>();
-	if (PlayerInputComponent == nullptr)
-	{
-		return;
-	}
-
 	const FVector2D LastMovementInput = PlayerInputComponent->GetLastMovementInput();
-	FVector RollDirection;
 
 	if (LastMovementInput.IsNearlyZero())
 	{
@@ -53,11 +45,19 @@ void UGameplayAbilityTask_RollMove::TickTask(float DeltaTime)
 
 		RollDirection = (ForwardDirection * LastMovementInput.Y + RightDirection * LastMovementInput.X).GetSafeNormal();
 	}
-	
-	if (UCharacterMovementComponent* MovementComponent = Avatar->GetCharacterMovement())
-	{
-		MovementComponent->Velocity = RollDirection * (Distance / Duration);
-	}
+
+	bTickingTask = true;
+}
+
+void UGameplayAbilityTask_RollMove::TickTask(float DeltaTime)
+{
+	ACharacter* Avatar = Cast<ACharacter>(GetAvatarActor());
+	check(Avatar);
+
+	UCharacterMovementComponent* MovementComponent = Avatar->GetCharacterMovement();
+	check(MovementComponent);
+
+	MovementComponent->Velocity = RollDirection * (Distance / Duration);
 }
 
 UPNGameplayAbility_Roll::UPNGameplayAbility_Roll()

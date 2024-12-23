@@ -25,6 +25,7 @@ public:
 	ATTRIBUTE_ACCESSORS(UPNPawnAttributeSet, MaxHp);
 	ATTRIBUTE_ACCESSORS(UPNPawnAttributeSet, Damage);
 	ATTRIBUTE_ACCESSORS(UPNPawnAttributeSet, Power);
+	ATTRIBUTE_ACCESSORS(UPNPawnAttributeSet, Heal);
 	
 	mutable FOutOfHpDelegate OnOutOfHp;
 	mutable FOnChangedPawnAttributeDelegate OnChangedPawnAttributeDelegate;
@@ -44,6 +45,9 @@ private:
 	
 	UPROPERTY()
 	FGameplayAttributeData Power;
+
+	UPROPERTY()
+	FGameplayAttributeData Heal;
 	
 	bool bOutOfHp = false;
 };

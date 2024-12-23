@@ -81,67 +81,16 @@ void UPNPlayerInputComponent::BeginPlay()
 	}
 
 	EnableInput(true);
-
-	UAbilitySystemComponent* AbilitySystemComponent = Owner->GetPlayerState<APNPlayerState>()->GetAbilitySystemComponent();
-	AbilitySystemComponent->AddLooseGameplayTag(FPNGameplayTags::Get().Status_Peace);
-	AbilitySystemComponent->AddLooseGameplayTag(FPNGameplayTags::Get().Status_Idle);
-
-	FGameplayTagContainer ActionTagContainer = UGameplayTagsManager::Get().RequestGameplayTagChildren(FPNGameplayTags::Get().Action);
-	OnActionTagDelegateHandle = AbilitySystemComponent->RegisterGenericGameplayTagEvent().AddUObject(this, &ThisClass::OnUpdateActionTag);
-
-	Owner->OnCharacterMovementUpdated.AddDynamic(this, &ThisClass::OnMovementUpdated);
-
-#ifdef WITH_EDITOR
-	// 테스트 용도
-	AbilitySystemComponent->AddLooseGameplayTag(FPNGameplayTags::Get().Status_Fight);
-#endif
-}
-
-void UPNPlayerInputComponent::DestroyComponent(bool bPromoteChildren)
-{
-	if (APNCharacter* Owner = GetPawn<APNCharacter>())
-	{
-		if (UAbilitySystemComponent* AbilitySystemComponent = Owner->GetAbilitySystemComponent())
-		{
-			AbilitySystemComponent->RegisterGenericGameplayTagEvent().Remove(OnActionTagDelegateHandle);
-		}
-	}
-
-	Super::DestroyComponent(bPromoteChildren);
 }
 
 void UPNPlayerInputComponent::Input_Move(const FInputActionValue& InputActionValue)
 {
-	APNCharacterPlayer* Owner = GetPawnChecked<APNCharacterPlayer>();
-
-	if (UAbilitySystemComponent* AbilitySystemComponent = Owner->GetAbilitySystemComponent())
-	{
-		AbilitySystemComponent->SetLooseGameplayTagCount(FPNGameplayTags::Get().Action_Move, 1);
-	}
-
+	APNCharacterPlayer* Owner = GetPawn<APNCharacterPlayer>();
+	check(Owner);
+	
 	Owner->MoveByInput(InputActionValue.Get<FVector2D>());
 
 	LastMovementInput = InputActionValue.Get<FVector2D>();
-}
-
-void UPNPlayerInputComponent::OnMovementUpdated(float DeltaSeconds, FVector OldLocation, FVector OldVelocity)
-{
-	APNCharacter* Owner = GetPawn<APNCharacter>();
-	if (Owner == nullptr)
-	{
-		return;
-	}
-
-	if (UPawnMovementComponent* MovementComponent = Owner->GetMovementComponent())
-	{
-		if (MovementComponent->Velocity.IsNearlyZero())
-		{
-			if (UAbilitySystemComponent* AbilitySystemComponent = Owner->GetAbilitySystemComponent())
-			{
-				AbilitySystemComponent->SetLooseGameplayTagCount(FPNGameplayTags::Get().Action_Move, 0);
-			}
-		}
-	}
 }
 
 void UPNPlayerInputComponent::Input_Look(const FInputActionValue& InputActionValue)
@@ -219,30 +168,4 @@ void UPNPlayerInputComponent::Input_AbilityReleased(FGameplayTag InputTag)
 	}
 
 	ASC->AbilityInputReleased(InputTag);
-}
-
-void UPNPlayerInputComponent::OnUpdateActionTag(const FGameplayTag GameplayTag, int32 Count) const
-{
-	if (GameplayTag.MatchesTag(FPNGameplayTags::Get().Action) == false)
-	{
-		return;
-	}
-
-	APNCharacter* Owner = GetPawn<APNCharacter>();
-	if (Owner == nullptr)
-	{
-		return;
-	}
-
-	UAbilitySystemComponent* AbilitySystemComponent = Owner->GetAbilitySystemComponent();
-	check(AbilitySystemComponent);
-
-	if (Count > 0)
-	{
-		AbilitySystemComponent->SetLooseGameplayTagCount(FPNGameplayTags::Get().Status_Idle, 0);
-	}
-	else if (Owner->IsIdle())
-	{
-		AbilitySystemComponent->SetLooseGameplayTagCount(FPNGameplayTags::Get().Status_Idle, 1);
-	}
 }

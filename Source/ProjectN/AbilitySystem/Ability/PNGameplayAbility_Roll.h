@@ -23,6 +23,8 @@ public:
 private:
 	float Duration;
 	float Distance;
+	
+	FVector RollDirection;
 };
 
 /**

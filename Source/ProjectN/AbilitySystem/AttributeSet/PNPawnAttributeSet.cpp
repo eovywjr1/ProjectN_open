@@ -7,7 +7,11 @@
 #include "PNGameplayTags.h"
 
 UPNPawnAttributeSet::UPNPawnAttributeSet()
-	: MaxHp(100.0f)
+	: MaxHp(1000.0f),
+	  Damage(0.0f),
+	  Power(0.0f),
+	  Heal(0.0f)
+
 {
 	InitHp(GetMaxHp());
 }
@@ -23,8 +27,17 @@ void UPNPawnAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffect
 	{
 		if (GetPower() < 0.0f)
 		{
-			SetHp(0.0f);
+			SetPower(0.0f);
 		}
+	}
+	else if (Data.EvaluatedData.Attribute == GetHealAttribute())
+	{
+		if (GetHeal() > 0.0f)
+		{
+			SetHp(FMath::Clamp(GetHp() + GetHeal(), 0.0f, GetMaxHp()));
+		}
+		
+		SetHeal(0.0f);
 	}
 
 	if (GetHp() <= 0.0f && bOutOfHp == false)
@@ -34,6 +47,6 @@ void UPNPawnAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffect
 		Data.Target.AddLooseGameplayTag(FPNGameplayTags::Get().Status_Dead);
 		OnOutOfHp.Broadcast();
 	}
-	
+
 	OnChangedPawnAttributeDelegate.Broadcast(Data.EvaluatedData.Attribute);
 }

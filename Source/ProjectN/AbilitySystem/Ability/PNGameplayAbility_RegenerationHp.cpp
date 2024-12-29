@@ -7,6 +7,7 @@
 #include "AbilitySystem/PNAbilitySystemComponent.h"
 #include "AbilitySystem/AttributeSet/PNPawnAttributeSet.h"
 #include "AbilitySystem/AttributeSet/PNPlayerAttributeSet.h"
+#include "Component/PNStatusActorComponent.h"
 
 constexpr int RegenerationHpCoolTime = 10.0f;
 
@@ -44,27 +45,20 @@ void UPNGameplayAbility_RegenerationHp::EndAbility(const FGameplayAbilitySpecHan
 
 void UPNGameplayAbility_RegenerationHp::ApplyHealthRegeneration()
 {
-	UGameplayEffect* RegenerationHpEffect = NewObject<UGameplayEffect>(this, FName(TEXT("RegenerationHpEffect")));
-	RegenerationHpEffect->DurationPolicy = EGameplayEffectDurationType::Instant;
-
-	FGameplayModifierInfo StatusModifierInfo;
-	StatusModifierInfo.Attribute = UPNPawnAttributeSet::GetHealAttribute();
-
 	UPNAbilitySystemComponent* AbilitySystemComponent = Cast<UPNAbilitySystemComponent>(GetAbilitySystemComponentFromActorInfo());
 	check(AbilitySystemComponent);
 
 	const UPNPlayerAttributeSet* PlayerAttributeSet = AbilitySystemComponent->GetSet<UPNPlayerAttributeSet>();
 	check(PlayerAttributeSet);
 
-	const float RegenerationHp = PlayerAttributeSet->GetMaxHp() * PlayerAttributeSet->GetRegenerationHpRate();
-	StatusModifierInfo.ModifierMagnitude = FGameplayEffectModifierMagnitude(FScalableFloat(RegenerationHp));
-	RegenerationHpEffect->Modifiers.Add(StatusModifierInfo);
-
-	FGameplayEffectContextHandle EffectContextHandle = AbilitySystemComponent->MakeEffectContext();
-	EffectContextHandle.AddSourceObject(GetAvatarActorFromActorInfo());
-
-	FGameplayEffectSpecHandle EffectSpecHandle = AbilitySystemComponent->MakeOutgoingSpecByGameplayEffect(RegenerationHpEffect, 0, EffectContextHandle);
-	AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*EffectSpecHandle.Data.Get());
+	const float MaxHp = PlayerAttributeSet->GetMaxHp();
+	if (PlayerAttributeSet->GetHp() == MaxHp)
+	{
+		return;
+	}
+	
+	const float RegenerationHp = MaxHp * PlayerAttributeSet->GetRegenerationHpRate();
+	GetAvatarActorFromActorInfo()->FindComponentByClass<UPNStatusActorComponent>()->RequestHeal(RegenerationHp);
 
 	--RegenerationRemainTime;
 	if (RegenerationRemainTime == 0)

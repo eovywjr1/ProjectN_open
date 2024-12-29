@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -19,7 +18,7 @@ struct PROJECTN_API FHitBoxData
 public:
 	UPROPERTY(EditDefaultsOnly)
 	EHitBoxShape Shape;
-	
+
 	UPROPERTY(EditDefaultsOnly)
 	float HitBoxDurationTime = 0.0f;
 
@@ -31,4 +30,10 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, meta = (EditCondition = "Shape == EHitBoxShape::Box", EditConditionHides))
 	FVector BoxExtent = FVector::ZeroVector;
+};
+
+enum class PNDistanceUnit : uint16
+{
+	Meter = 100,
+	DefaultMeasurementUnit = 100
 };

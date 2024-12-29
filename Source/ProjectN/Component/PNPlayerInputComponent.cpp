@@ -4,17 +4,14 @@
 #include "PNPlayerInputComponent.h"
 
 #include "EnhancedInputSubsystems.h"
-#include "GameplayTagsManager.h"
 #include "PNEnhancedInputComponent.h"
 #include "PNGameplayTags.h"
 #include "PNPawnComponent.h"
 #include "PNPawnData.h"
 #include "AbilitySystem/PNAbilitySystemComponent.h"
 #include "Actor/PNCharacterPlayer.h"
-#include "GameFramework/PawnMovementComponent.h"
 #include "Input/PNInputConfig.h"
 #include "Player/PNPlayerController.h"
-#include "Player/PNPlayerState.h"
 
 UPNPlayerInputComponent::UPNPlayerInputComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -22,10 +19,7 @@ UPNPlayerInputComponent::UPNPlayerInputComponent(const FObjectInitializer& Objec
 
 void UPNPlayerInputComponent::InitializePlayerInput(UInputComponent* PlayerInputComponent)
 {
-	const APawn* Owner = GetPawn<APawn>();
-	check(Owner);
-
-	const UPNPawnComponent* PawnComponent = Owner->FindComponentByClass<UPNPawnComponent>();
+	const UPNPawnComponent* PawnComponent = GetPawn<APawn>()->FindComponentByClass<UPNPawnComponent>();
 	check(PawnComponent);
 	const UPNPawnData* PawnData = PawnComponent->GetPawnData();
 	check(PawnData);
@@ -39,7 +33,7 @@ void UPNPlayerInputComponent::InitializePlayerInput(UInputComponent* PlayerInput
 	PNEnhancedInputComponent->BindNativeAction(InputConfig, GameplayTags.InputTag_Move, ETriggerEvent::Triggered, this, &ThisClass::Input_Move);
 	PNEnhancedInputComponent->BindNativeAction(InputConfig, GameplayTags.InputTag_Look, ETriggerEvent::Triggered, this, &ThisClass::Input_Look);
 	PNEnhancedInputComponent->BindNativeAction(InputConfig, GameplayTags.InputTag_LockOn, ETriggerEvent::Triggered, this, &ThisClass::Input_LockOn);
-	PNEnhancedInputComponent->BindNativeAction(InputConfig, GameplayTags.InputTag_EnableLockOn, ETriggerEvent::Triggered, this, &ThisClass::Input_EnableLockOn);
+	PNEnhancedInputComponent->BindNativeAction(InputConfig, GameplayTags.InputTag_NextLockOnTarget, ETriggerEvent::Triggered, this, &ThisClass::Input_NextLockOnTarget);
 
 	PNEnhancedInputComponent->BindAbilityActions(InputConfig, this, &ThisClass::Input_AbilityPressed, &ThisClass::Input_AbilityReleased);
 }
@@ -87,7 +81,7 @@ void UPNPlayerInputComponent::Input_Move(const FInputActionValue& InputActionVal
 {
 	APNCharacterPlayer* Owner = GetPawn<APNCharacterPlayer>();
 	check(Owner);
-	
+
 	Owner->MoveByInput(InputActionValue.Get<FVector2D>());
 
 	LastMovementInput = InputActionValue.Get<FVector2D>();
@@ -100,28 +94,20 @@ void UPNPlayerInputComponent::Input_Look(const FInputActionValue& InputActionVal
 	PlayerController->RotationByInput(InputActionValue.Get<FVector2D>());
 }
 
-void UPNPlayerInputComponent::Input_EnableLockOn(const FInputActionValue& InputActionValue)
+void UPNPlayerInputComponent::Input_NextLockOnTarget(const FInputActionValue& InputActionValue)
 {
-	bIsEnableLockOn = !bIsEnableLockOn;
-
-	if (bIsEnableLockOn == false)
-	{
-		APawn* Owner = GetPawnChecked<APawn>();
-		APNPlayerController* PlayerController = CastChecked<APNPlayerController>(Owner->GetController());
-		PlayerController->DisableLockOn();
-	}
-}
-
-void UPNPlayerInputComponent::Input_LockOn(const FInputActionValue& InputActionValue)
-{
-	if (bIsEnableLockOn == false)
+	if (bIsActivatedLockOn == false)
 	{
 		return;
 	}
 
-	APawn* Owner = GetPawnChecked<APawn>();
-	APNPlayerController* PlayerController = CastChecked<APNPlayerController>(Owner->GetController());
-	PlayerController->SetLockOnTargetActor();
+	Cast<APNPlayerController>(GetPawn<APawn>()->GetController())->SetNextPriorityLockOnTargetActor();
+}
+
+void UPNPlayerInputComponent::Input_LockOn(const FInputActionValue& InputActionValue)
+{
+	bIsActivatedLockOn = !bIsActivatedLockOn;
+	Cast<APNPlayerController>(GetPawn<APawn>()->GetController())->ActivateLockOn(bIsActivatedLockOn);
 }
 
 void UPNPlayerInputComponent::Input_AbilityPressed(FGameplayTag InputTag)

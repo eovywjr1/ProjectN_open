@@ -2,7 +2,9 @@
 
 #include "PNCharacter.h"
 
+#include "PNGameplayTags.h"
 #include "AbilitySystem/PNAbilitySystemComponent.h"
+#include "AbilitySystem/AttributeSet/PNPawnAttributeSet.h"
 #include "Component/PNCharacterMovementComponent.h"
 #include "Component/PNPawnComponent.h"
 #include "Component/PNStatusActorComponent.h"
@@ -11,6 +13,40 @@
 #include "GameFramework/Controller.h"
 
 //////////////////////////////////////////////////////////////////////////
+
+void APNCharacter::SetMaxWalkSpeed(const float InMaxSpeed)
+{
+	GetCharacterMovement()->MaxWalkSpeed = InMaxSpeed;
+}
+
+float APNCharacter::GetMaxWalkSpeed() const
+{
+	return GetCharacterMovement()->MaxWalkSpeed;
+}
+
+void APNCharacter::OnInitializedStatus() const
+{
+	UAbilitySystemComponent* AbilitySystemComponent = GetAbilitySystemComponent();
+	if (AbilitySystemComponent == nullptr)
+	{
+		return;
+	}
+
+	GetCharacterMovement()->MaxWalkSpeed = AbilitySystemComponent->GetSet<UPNPawnAttributeSet>()->GetWalkSpeed();
+}
+
+void APNCharacter::SetDead()
+{
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
+	SetActorEnableCollision(false);
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	AnimInstance->StopAllMontages(0.0f);
+	if (DeadMontage)
+	{
+		AnimInstance->Montage_Play(DeadMontage, 1.0f);
+	}
+}
 
 APNCharacter::APNCharacter(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer.SetDefaultSubobjectClass<UPNCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -52,6 +88,17 @@ bool APNCharacter::IsPlayer() const
 	{
 		return false;
 	}
-	
+
 	return Controller->IsPlayerController();
+}
+
+bool APNCharacter::IsRun() const
+{
+	UAbilitySystemComponent* AbilitySystemComponent = GetAbilitySystemComponent();
+	if (AbilitySystemComponent == nullptr)
+	{
+		return false;
+	}
+
+	return AbilitySystemComponent->HasMatchingGameplayTag(FPNGameplayTags::Get().Action_Run);
 }

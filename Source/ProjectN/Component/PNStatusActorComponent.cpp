@@ -56,11 +56,13 @@ void UPNStatusActorComponent::ApplyStatusFromEquipment(const FEquipmentDataTable
 		EquipmentStatusEffect->Modifiers.Add(StatusModifierInfo);
 	}
 
-	FGameplayEffectContextHandle EffectContextHandle = AbilitySystemComponent->MakeEffectContext();
-	EffectContextHandle.AddSourceObject(Owner);
+	FActiveGameplayEffectHandle ActiveEffectHandle = AbilitySystemComponent->ApplyGameplayEffectToSelf(EquipmentStatusEffect);
+	if (ActiveEffectHandle.IsValid() == false)
+	{
+		return;
+	}
 
-	FGameplayEffectSpecHandle EffectSpecHandle = AbilitySystemComponent->MakeOutgoingSpecByGameplayEffect(EquipmentStatusEffect, 0, EffectContextHandle);
-	ActiveEquipStatusEffectHandles.Add(EquipmentDataTable->GetEquipSlotType(), AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*EffectSpecHandle.Data.Get()));
+	ActiveEquipStatusEffectHandles.Add(EquipmentDataTable->GetEquipSlotType(), ActiveEffectHandle);
 }
 
 void UPNStatusActorComponent::UnApplyStatusFromEquipment(const EEquipSlotType EquipSlot)
@@ -83,6 +85,30 @@ void UPNStatusActorComponent::OnPawnAttributeSetChanged(FGameplayAttribute Attri
 	{
 		Cast<APNHUD>(PlayerController->GetHUD())->OnStatusChangedDelegate.Broadcast(FObjectKey(GetOwner()), GetStatusType(Attribute));
 	}
+}
+
+void UPNStatusActorComponent::RequestHeal(const float HealAmount)
+{
+	if (HealAmount <= 0.0f)
+	{
+		return;
+	}
+
+	IAbilitySystemInterface* OwnerAbilitySystemInterface = Cast<IAbilitySystemInterface>(GetOwner());
+	check(OwnerAbilitySystemInterface);
+
+	UPNAbilitySystemComponent* AbilitySystemComponent = Cast<UPNAbilitySystemComponent>(OwnerAbilitySystemInterface->GetAbilitySystemComponent());
+	check(AbilitySystemComponent);
+
+	UGameplayEffect* HealEffect = NewObject<UGameplayEffect>(this, FName(TEXT("HealEffect")));
+	HealEffect->DurationPolicy = EGameplayEffectDurationType::Instant;
+
+	FGameplayModifierInfo StatusModifierInfo;
+	StatusModifierInfo.Attribute = UPNPawnAttributeSet::GetHealAttribute();
+	StatusModifierInfo.ModifierMagnitude = FGameplayEffectModifierMagnitude(FScalableFloat(HealAmount));
+	HealEffect->Modifiers.Add(StatusModifierInfo);
+
+	AbilitySystemComponent->ApplyGameplayEffectToSelf(HealEffect);
 }
 
 void UPNStatusActorComponent::BeginPlay()
@@ -114,6 +140,15 @@ void UPNStatusActorComponent::BeginPlay()
 		AbilitySystemComponent->InitStats(UPNPawnAttributeSet::StaticClass(), nullptr);
 	}
 
+	const UPNPawnAttributeSet* PawnAttributeSet = AbilitySystemComponent->GetSet<UPNPawnAttributeSet>();
+	PawnAttributeSet->OnChangedPawnAttributeDelegate.AddUObject(this, &ThisClass::OnPawnAttributeSetChanged);
+	PawnAttributeSet->OnOutOfHp.AddUObject(this, &ThisClass::OnOutOfHp);
+	if (APlayerController* PlayerController = GetWorld()->GetFirstPlayerController())
+	{
+		Cast<APNHUD>(PlayerController->GetHUD())->OnInitStatusDelegate.Broadcast(FObjectKey(GetOwner()));
+	}
+
+
 #ifdef WITH_EDITOR
 	// Todo. 전투 전환 구현시 제거
 	AbilitySystemComponent->AddLooseGameplayTag(FPNGameplayTags::Get().Status_Fight);
@@ -123,11 +158,7 @@ void UPNStatusActorComponent::BeginPlay()
 	FGameplayEventData PayLoad;
 	AbilitySystemComponent->HandleGameplayEvent(FPNGameplayTags::Get().Status_Peace, &PayLoad);
 
-	AbilitySystemComponent->GetSet<UPNPawnAttributeSet>()->OnChangedPawnAttributeDelegate.AddUObject(this, &ThisClass::OnPawnAttributeSetChanged);
-	if (APlayerController* PlayerController = GetWorld()->GetFirstPlayerController())
-	{
-		Cast<APNHUD>(PlayerController->GetHUD())->OnInitStatusDelegate.Broadcast(FObjectKey(GetOwner()));
-	}
+	Owner->OnInitializedStatus();
 }
 
 FGameplayAttribute UPNStatusActorComponent::GetStatusAttribute(const EStatusType StatusType) const
@@ -162,4 +193,17 @@ EStatusType UPNStatusActorComponent::GetStatusType(const FGameplayAttribute Attr
 	}
 
 	return EStatusType::Invalid;
+}
+
+void UPNStatusActorComponent::OnOutOfHp()
+{
+	APNCharacter* Owner = GetOwner<APNCharacter>();
+	check(Owner);
+
+	UAbilitySystemComponent* AbilitySystemComponent = Owner->GetAbilitySystemComponent();
+	check(AbilitySystemComponent);
+
+	AbilitySystemComponent->AddLooseGameplayTag(FPNGameplayTags::Get().Status_Dead, 1);
+	
+	Owner->SetDead();
 }

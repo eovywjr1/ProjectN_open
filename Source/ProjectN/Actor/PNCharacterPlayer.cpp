@@ -16,6 +16,8 @@
 APNCharacterPlayer::APNCharacterPlayer(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
+	bUseControllerRotationYaw = true;
+
 	OverrideInputComponentClass = UPNEnhancedInputComponent::StaticClass();
 
 	PNPlayerInputComponent = CreateDefaultSubobject<UPNPlayerInputComponent>(TEXT("PlayerInputComponent"));
@@ -63,7 +65,14 @@ void APNCharacterPlayer::MoveByInput(const FVector2D MovementVector)
 	const FRotator YawRotation(0, Rotation.Yaw, 0);
 	const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 	const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-
+	
 	AddMovementInput(ForwardDirection, MovementVector.Y);
 	AddMovementInput(RightDirection, MovementVector.X);
+	
+	bUseControllerRotationYaw = true;
+	
+	if (IsRun() && MovementVector.Y >= 0.0f && FMath::Abs(MovementVector.X) > 0.0f)
+	{
+		bUseControllerRotationYaw = false;
+	}
 }

@@ -29,7 +29,7 @@ public:
 	FGameplayTag InputTag_Jump;
 	FGameplayTag InputTag_Look;
 	FGameplayTag InputTag_LockOn;
-	FGameplayTag InputTag_EnableLockOn;
+	FGameplayTag InputTag_NextLockOnTarget;
 
 	FGameplayTag Status_Dead;
 	FGameplayTag Status_Peace;

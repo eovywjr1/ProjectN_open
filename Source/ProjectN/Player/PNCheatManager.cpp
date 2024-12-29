@@ -53,10 +53,5 @@ void UPNCheatManager::DecreasePlayerHp(const uint16 Amount)
 	DamageEffect->Modifiers.Add(StatusModifierInfo);
 
 	APNCharacter* Player = GetPlayerController()->GetPawn<APNCharacter>();
-	UPNAbilitySystemComponent* AbilitySystemComponent = Cast<UPNAbilitySystemComponent>(Player->GetAbilitySystemComponent());
-	FGameplayEffectContextHandle EffectContextHandle = AbilitySystemComponent->MakeEffectContext();
-	EffectContextHandle.AddSourceObject(Player);
-
-	FGameplayEffectSpecHandle EffectSpecHandle = AbilitySystemComponent->MakeOutgoingSpecByGameplayEffect(DamageEffect, 0, EffectContextHandle);
-	AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*EffectSpecHandle.Data.Get());
+	Cast<UPNAbilitySystemComponent>(Player->GetAbilitySystemComponent())->ApplyGameplayEffectToSelf(DamageEffect);
 }

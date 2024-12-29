@@ -17,11 +17,11 @@ class PROJECTN_API APNPlayerController : public APlayerController
 
 public:
 	bool CanCameraInputControl() const;
-	
+
 	void RotationByInput(const FVector2D LookAxisVector);
-	
-	void SetLockOnTargetActor();
-	FORCEINLINE void DisableLockOn() { LockOnTargetActor = nullptr; }
+
+	void ActivateLockOn(const bool bIsActivate);
+	void SetNextPriorityLockOnTargetActor();
 
 private:
 	APNPlayerController(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
@@ -29,10 +29,13 @@ private:
 	virtual void Tick(float DeltaSeconds) override final;
 	virtual void BeginPlay() override final;
 
-	bool CanLockOnTargetActor(AActor* TargetActor) const;
+	bool CanLockOnTargetActor(const AActor* TargetActor) const;
 
 	UFUNCTION()
 	void CheckLockOnTimerCallback();
+
+	void SetLockOnTargetActor(const AActor* const InLockOnTargetActor);
+	void GetSortedLockOnTargetActor(TArray<AActor*>& InLockOnTargetActors) const;
 
 private:
 	UPROPERTY(EditDefaultsOnly, Category = LockOn, meta = (AllowPrivateAccess = "true"))
@@ -40,14 +43,14 @@ private:
 
 	FPNPercent LockOnTargetVisibleAreaRate;
 
-	TObjectPtr<AActor> LockOnTargetActor = nullptr;
+	TObjectPtr<const AActor> LockOnTargetActor = nullptr;
 
 	FTimerHandle CheckLockOnTimerHandle;
 	FTimerHandle ClearLockOnTargetTimerHandle;
 
 	UPROPERTY(EditDefaultsOnly, Category = LockOn, meta = (AllowPrivateAccess = "true"))
 	float CheckLockOnTimerPeriod = 1.0f;
-	
+
 	UPROPERTY(EditDefaultsOnly, Category = LockOn, meta = (AllowPrivateAccess = "true"))
 	float ClearLockOnTimerPeriod = 3.0f;
 };

@@ -92,7 +92,7 @@ void UPNGameplayAbility_Roll::ActivateAbility(const FGameplayAbilitySpecHandle H
 		UE_LOG(LogPN, Error, TEXT("ActionMontage Not Found in Roll Ability"));
 	}
 
-	// Todo. RollDuration을 Montage와 같게 할 것인지 논의 필요
+	// Todo. 추후 루트모션으로 변경해야 함
 	UGameplayAbilityTask_RollMove* RollTask = UGameplayAbilityTask_RollMove::CreateRollProxy(this, TEXT("Roll"), RollDuration, RollDistance);
 	RollTask->ReadyForActivation();
 }

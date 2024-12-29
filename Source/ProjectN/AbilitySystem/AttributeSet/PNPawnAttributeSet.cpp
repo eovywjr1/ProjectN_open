@@ -4,13 +4,19 @@
 #include "AbilitySystem/AttributeSet/PNPawnAttributeSet.h"
 
 #include "GameplayEffectExtension.h"
+#include "PNCommonModule.h"
 #include "PNGameplayTags.h"
+
+constexpr const uint8 DefaultWalkSpeedDurationPerDefaultMeasurementUnit = 16;
+constexpr const uint16 DefaultWalkSpeed = static_cast<uint16>(PNDistanceUnit::DefaultMeasurementUnit) * static_cast<uint16>(PNDistanceUnit::Meter) / DefaultWalkSpeedDurationPerDefaultMeasurementUnit;
 
 UPNPawnAttributeSet::UPNPawnAttributeSet()
 	: MaxHp(1000.0f),
 	  Damage(0.0f),
 	  Power(0.0f),
-	  Heal(0.0f)
+	  Heal(0.0f),
+	  WalkSpeed(DefaultWalkSpeed),
+	  RunSpeedMultiplier(2.0f)
 
 {
 	InitHp(GetMaxHp());
@@ -36,7 +42,7 @@ void UPNPawnAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffect
 		{
 			SetHp(FMath::Clamp(GetHp() + GetHeal(), 0.0f, GetMaxHp()));
 		}
-		
+
 		SetHeal(0.0f);
 	}
 

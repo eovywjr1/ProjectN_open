@@ -30,7 +30,4 @@ private:
 private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Run, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UAnimMontage> RunActionMontage = nullptr;
-	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Roll, Meta = (AllowPrivateAccess = "true"))
-	float SpeedMultiplier = 0.0f;
 };

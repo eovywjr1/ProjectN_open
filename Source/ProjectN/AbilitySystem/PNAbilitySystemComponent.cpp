@@ -13,7 +13,7 @@ void UPNAbilitySystemComponent::AbilityInputPressed(FGameplayTag InputTag)
 	for (FGameplayAbilitySpec& AbilitySpec : ActivatableAbilities.Items)
 	{
 		AbilitySpec.InputPressed = true;
-		
+
 		if (AbilitySpec.Ability && AbilitySpec.DynamicAbilityTags.HasTagExact(InputTag))
 		{
 			if (AbilitySpec.IsActive())
@@ -28,7 +28,7 @@ void UPNAbilitySystemComponent::AbilityInputPressed(FGameplayTag InputTag)
 	}
 }
 
-void UPNAbilitySystemComponent::AbilityInputReleased(FGameplayTag InputTag) 
+void UPNAbilitySystemComponent::AbilityInputReleased(FGameplayTag InputTag)
 {
 	if (InputTag.IsValid() == false)
 	{
@@ -38,7 +38,7 @@ void UPNAbilitySystemComponent::AbilityInputReleased(FGameplayTag InputTag)
 	for (FGameplayAbilitySpec& AbilitySpec : ActivatableAbilities.Items)
 	{
 		AbilitySpec.InputPressed = false;
-		
+
 		if (AbilitySpec.IsActive() && AbilitySpec.DynamicAbilityTags.HasTagExact(InputTag))
 		{
 			AbilitySpecInputReleased(AbilitySpec);
@@ -60,4 +60,18 @@ FGameplayEffectSpecHandle UPNAbilitySystemComponent::MakeOutgoingSpecByGameplayE
 	}
 
 	return FGameplayEffectSpecHandle(nullptr);
+}
+
+FActiveGameplayEffectHandle UPNAbilitySystemComponent::ApplyGameplayEffectToSelf(UGameplayEffect* GameplayEffect)
+{
+	if (IsValid(GameplayEffect) == false)
+	{
+		return FActiveGameplayEffectHandle();
+	}
+	
+	FGameplayEffectContextHandle EffectContextHandle = MakeEffectContext();
+	EffectContextHandle.AddSourceObject(GetOwner());
+
+	FGameplayEffectSpecHandle EffectSpecHandle = MakeOutgoingSpecByGameplayEffect(GameplayEffect, 0, EffectContextHandle);
+	return ApplyGameplayEffectSpecToSelf(*EffectSpecHandle.Data.Get());
 }

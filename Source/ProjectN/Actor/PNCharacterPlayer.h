@@ -18,6 +18,7 @@ class PROJECTN_API APNCharacterPlayer : public APNCharacter
 
 private:
 	APNCharacterPlayer(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+	
 	virtual void PossessedBy(AController* NewController) override final;
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override final;
 	

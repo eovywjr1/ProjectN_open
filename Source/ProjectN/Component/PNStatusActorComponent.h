@@ -25,12 +25,16 @@ public:
 	void UnApplyStatusFromEquipment(const EEquipSlotType EquipSlot);
 	
 	void OnPawnAttributeSetChanged(FGameplayAttribute Attribute);
+	
+	void RequestHeal(const float HealAmount);
 
 private:
 	virtual void BeginPlay() override final;
 	
 	FGameplayAttribute GetStatusAttribute(const EStatusType StatusType) const;
 	EStatusType GetStatusType(const FGameplayAttribute Attribute) const;
+	
+	void OnOutOfHp();
 	
 private:
 	UPROPERTY()

@@ -38,7 +38,7 @@ void APNPlayerController::Tick(float DeltaTime)
 void APNPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	FInputModeGameOnly GameOnlyInputMode;
 	SetInputMode(GameOnlyInputMode);
 }
@@ -64,25 +64,69 @@ void APNPlayerController::RotationByInput(const FVector2D LookAxisVector)
 	AddPitchInput(LookAxisVector.Y);
 }
 
-void APNPlayerController::SetLockOnTargetActor()
+void APNPlayerController::ActivateLockOn(const bool bIsActivate)
 {
-	APawn* OwnerPawn = GetPawn();
-	if (OwnerPawn == nullptr)
+	if (bIsActivate == false)
+	{
+		LockOnTargetActor = nullptr;
+		CheckLockOnTimerHandle.Invalidate();
+		return;
+	}
+
+	TArray<AActor*> SortedLockOnTargetActor;
+	GetSortedLockOnTargetActor(SortedLockOnTargetActor);
+	if (SortedLockOnTargetActor.IsEmpty())
 	{
 		return;
 	}
 
-	TArray<AActor*> OverlappingActors;
+	SetLockOnTargetActor(SortedLockOnTargetActor[0]);
+}
+
+void APNPlayerController::SetNextPriorityLockOnTargetActor()
+{
+	if (IsValid(LockOnTargetActor) == false)
+	{
+		return;
+	}
+
+	TArray<AActor*> SortedLockOnTargetActor;
+	GetSortedLockOnTargetActor(SortedLockOnTargetActor);
+
+	const uint32 SortedLockOnTargetActorNum = SortedLockOnTargetActor.Num();
+	for (uint32 i = 0; i < SortedLockOnTargetActorNum; ++i)
+	{
+		if (LockOnTargetActor == SortedLockOnTargetActor[i])
+		{
+			SetLockOnTargetActor(SortedLockOnTargetActor[(i + 1) % SortedLockOnTargetActorNum]);
+			break;
+		}
+	}
+}
+
+void APNPlayerController::SetLockOnTargetActor(const AActor* const InLockOnTargetActor)
+{
+	if (IsValid(InLockOnTargetActor) == false)
+	{
+		return;
+	}
+
+	LockOnTargetActor = InLockOnTargetActor;
+	GetWorld()->GetTimerManager().SetTimer(CheckLockOnTimerHandle, this, &ThisClass::CheckLockOnTimerCallback, CheckLockOnTimerPeriod, false, CheckLockOnTimerPeriod);
+}
+
+void APNPlayerController::GetSortedLockOnTargetActor(TArray<AActor*>& InLockOnTargetActors) const
+{
 	TArray<AActor*> ActorsToIgnore;
-	const FVector OwnerLocation = OwnerPawn->GetActorLocation();
+	TArray<AActor*> OverlappingActors;
+	const FVector OwnerLocation = GetPawn()->GetActorLocation();
 	UKismetSystemLibrary::SphereOverlapActors(GetWorld(), OwnerLocation, SearchLockOnTargetRadius, TArray<TEnumAsByte<EObjectTypeQuery>>(), APawn::StaticClass(), ActorsToIgnore, OverlappingActors);
 
 #ifdef ENABLE_DRAW_DEBUG
 	DrawDebugSphere(GetWorld(), OwnerLocation, SearchLockOnTargetRadius, 32, FColor::Red, true, 1.0f);
 #endif
 
-	AActor* NearestTarget = nullptr;
-	float NearestDistance = FLT_MAX;
+	InLockOnTargetActors.Reserve(OverlappingActors.Num());
 
 	for (AActor* Actor : OverlappingActors)
 	{
@@ -91,29 +135,19 @@ void APNPlayerController::SetLockOnTargetActor()
 			continue;
 		}
 
-		const float Distance = FVector::Distance(OwnerLocation, Actor->GetActorLocation());
-
-		if (NearestTarget == nullptr)
-		{
-			NearestTarget = Actor;
-			NearestDistance = Distance;
-		}
-		else if (Distance < NearestDistance)
-		{
-			NearestDistance = Distance;
-			NearestTarget = Actor;
-		}
+		InLockOnTargetActors.Add(Actor);
 	}
 
-	LockOnTargetActor = NearestTarget;
-
-	if (LockOnTargetActor && CheckLockOnTimerHandle.IsValid() == false)
+	InLockOnTargetActors.Shrink();
+	InLockOnTargetActors.Sort([OwnerLocation](const AActor& A, const AActor& B)
 	{
-		GetWorld()->GetTimerManager().SetTimer(CheckLockOnTimerHandle, this, &ThisClass::CheckLockOnTimerCallback, CheckLockOnTimerPeriod, false, CheckLockOnTimerPeriod);
-	}
+		float DistancePlayerToA = FVector::Dist(OwnerLocation, A.GetActorLocation());
+		float DistancePlayerToB = FVector::Dist(OwnerLocation, B.GetActorLocation());
+		return DistancePlayerToA < DistancePlayerToB;
+	});
 }
 
-bool APNPlayerController::CanLockOnTargetActor(AActor* TargetActor) const
+bool APNPlayerController::CanLockOnTargetActor(const AActor* TargetActor) const
 {
 	if (IsValid(TargetActor) == false)
 	{
@@ -127,12 +161,7 @@ bool APNPlayerController::CanLockOnTargetActor(AActor* TargetActor) const
 	// }
 
 	APawn* OwnerPawn = GetPawn();
-	if (OwnerPawn == nullptr || TargetActor == OwnerPawn)
-	{
-		return false;
-	}
-
-	if (PlayerCameraManager == nullptr)
+	if (TargetActor == OwnerPawn)
 	{
 		return false;
 	}
@@ -170,22 +199,29 @@ bool APNPlayerController::CanLockOnTargetActor(AActor* TargetActor) const
 	const float FOVRadians = FMath::DegreesToRadians(PlayerCameraManager->GetFOVAngle());
 	const float CosHalfFOV = FMath::Cos(FOVRadians * 0.5f);
 
-	TArray<FVector> CheckPoints;
-	FCriticalSection BoxCenterCriticalSection;
-	CheckPoints.Reserve(TotalGridPoints);
-
 	FThreadSafeCounter TotalPointCounter(0);
-	
+	FThreadSafeCounter VisiblePointCounter(0);
+
+#ifdef ENABLE_DRAW_DEBUG
+	TMap<FVector, bool> CheckPointHits;
+	FCriticalSection CheckPointHitsCriticalSection;
+	CheckPointHits.Reserve(TotalGridPoints);
+#endif
+
 	ParallelFor(TotalGridPoints,
-	            [this, ScaledHalfHeight, ScaledRadius, BoxHeight, BoxWidth, RightVector, UpVector, ComponentTransform, CameraLocation, CosHalfFOV, &CheckPoints, &BoxCenterCriticalSection, &TotalPointCounter](int32 Index)
+	            [this, ScaledHalfHeight, ScaledRadius, BoxHeight, BoxWidth, RightVector, UpVector, &ComponentTransform, CameraLocation, CosHalfFOV, &TotalPointCounter, &VisiblePointCounter, &QueryParams
+#ifdef ENABLE_DRAW_DEBUG
+		          , &CheckPointHits, &CheckPointHitsCriticalSection
+#endif
+	            ](int32 Index)
 	            {
 		            const int32 HeightIndex = Index / GridDivisionCount;
 		            const int32 WidthIndex = Index % GridDivisionCount;
 
 		            const float VerticalOffset = -ScaledHalfHeight + (BoxHeight / 2) + (BoxHeight * HeightIndex);
 		            const float HorizontalOffset = -ScaledRadius + (BoxWidth / 2) + (BoxWidth * WidthIndex);
-		            
-	            	FVector Point = ComponentTransform.GetLocation();
+
+		            FVector Point = ComponentTransform.GetLocation();
 		            Point += UpVector * VerticalOffset + RightVector * HorizontalOffset;
 
 		            const FVector LocalPoint = ComponentTransform.InverseTransformPosition(Point);
@@ -203,35 +239,38 @@ bool APNPlayerController::CanLockOnTargetActor(AActor* TargetActor) const
 			            return;
 		            }
 
+		            FHitResult HitResult;
+		            const bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Point, CameraLocation, ECC_Visibility, QueryParams);
+		            if (bHit == false)
 		            {
-			            FScopeLock Lock(&BoxCenterCriticalSection);
-			            CheckPoints.Add(Point);
+			            VisiblePointCounter.Increment();
 		            }
+
+#ifdef ENABLE_DRAW_DEBUG
+		            {
+			            FScopeLock Lock(&CheckPointHitsCriticalSection);
+			            CheckPointHits.Add(Point, bHit);
+		            }
+#endif
 	            });
 
-	uint8 VisiblePointCount = 0;
+// #ifdef ENABLE_DRAW_DEBUG
+// 	for (const TPair<FVector, bool>& CheckPointHit : CheckPointHits)
+// 	{
+// 		const FColor PointColor = CheckPointHit.Value == false ? FColor::Green : FColor::Red;
+// 		DrawDebugPoint(GetWorld(), CheckPointHit.Key, 5.0f, PointColor, false, 5.0f);
+// 	}
+// #endif
 
-	for (const FVector& Point : CheckPoints)
-	{
-		FHitResult HitResult;
-		const bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Point, CameraLocation, ECC_Visibility, QueryParams);
-		if (bHit == false)
-		{
-			++VisiblePointCount;
-		}
-
-		#ifdef ENABLE_DRAW_DEBUG
-				const FColor PointColor = bHit == false ? FColor::Green : FColor::Red;
-				DrawDebugPoint(GetWorld(), Point, 5.0f, PointColor, false, 5.0f);
-		#endif
-	}
-
-	return LockOnTargetVisibleAreaRate <= FPNPercent::FromFraction(VisiblePointCount, TotalPointCounter.GetValue());
+	return LockOnTargetVisibleAreaRate <= FPNPercent::FromFraction(VisiblePointCounter.GetValue(), TotalPointCounter.GetValue());
 }
 
 void APNPlayerController::CheckLockOnTimerCallback()
 {
-	CheckLockOnTimerHandle.Invalidate();
+	if (CheckLockOnTimerHandle.IsValid() == false)
+	{
+		return;
+	}
 
 	if (CanLockOnTargetActor(LockOnTargetActor))
 	{

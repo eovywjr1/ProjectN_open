@@ -3,10 +3,11 @@
 
 #include "PNGameplayAbility_Run.h"
 
+#include "AbilitySystemComponent.h"
 #include "PNGameplayTags.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
-#include "GameFramework/Character.h"
-#include "GameFramework/CharacterMovementComponent.h"
+#include "AbilitySystem/AttributeSet/PNPawnAttributeSet.h"
+#include "Actor/PNCharacter.h"
 
 UPNGameplayAbility_Run::UPNGameplayAbility_Run()
 {
@@ -19,14 +20,13 @@ void UPNGameplayAbility_Run::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	ACharacter* Avatar = CastChecked<ACharacter>(ActorInfo->AvatarActor.Get());
-	UCharacterMovementComponent* MovementComponent = Avatar->GetCharacterMovement();
-	if (MovementComponent == nullptr)
-	{
-		return;
-	}
-
-	MovementComponent->MaxWalkSpeed *= SpeedMultiplier;
+	APNCharacter* Avatar = Cast<APNCharacter>(ActorInfo->AvatarActor.Get());
+	check(Avatar);
+	
+	UAbilitySystemComponent* AbilitySystemComponent = Avatar->GetAbilitySystemComponent();
+	check(AbilitySystemComponent);
+	
+	Avatar->SetMaxWalkSpeed(Avatar->GetMaxWalkSpeed() * AbilitySystemComponent->GetSet<UPNPawnAttributeSet>()->GetRunSpeedMultiplier());
 
 	if (RunActionMontage)
 	{
@@ -39,11 +39,13 @@ void UPNGameplayAbility_Run::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 
 void UPNGameplayAbility_Run::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
-	ACharacter* Avatar = CastChecked<ACharacter>(ActorInfo->AvatarActor.Get());
-	if (UCharacterMovementComponent* MovementComponent = Avatar->GetCharacterMovement())
-	{
-		MovementComponent->MaxWalkSpeed /= SpeedMultiplier;
-	}
+	APNCharacter* Avatar = Cast<APNCharacter>(ActorInfo->AvatarActor.Get());
+	check(Avatar);
+	
+	UAbilitySystemComponent* AbilitySystemComponent = Avatar->GetAbilitySystemComponent();
+	check(AbilitySystemComponent);
+	
+	Avatar->SetMaxWalkSpeed(Avatar->GetMaxWalkSpeed() / AbilitySystemComponent->GetSet<UPNPawnAttributeSet>()->GetRunSpeedMultiplier());
 
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }

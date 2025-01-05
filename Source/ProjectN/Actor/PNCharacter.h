@@ -22,9 +22,9 @@ public:
 
 	void SetMaxWalkSpeed(const float InMaxSpeed);
 	float GetMaxWalkSpeed() const;
-	
+
 	void OnInitializedStatus() const;
-	
+
 	void SetDead();
 
 protected:
@@ -33,7 +33,7 @@ protected:
 protected:
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UPNPawnComponent> PawnComponent;
-	
+
 private:
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UAnimMontage> DeadMontage;

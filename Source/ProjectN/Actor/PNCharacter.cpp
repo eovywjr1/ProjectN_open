@@ -6,6 +6,7 @@
 #include "AbilitySystem/PNAbilitySystemComponent.h"
 #include "AbilitySystem/AttributeSet/PNPawnAttributeSet.h"
 #include "Component/PNCharacterMovementComponent.h"
+#include "Component/PNDetectComponent.h"
 #include "Component/PNPawnComponent.h"
 #include "Component/PNStatusActorComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -74,7 +75,14 @@ APNCharacter::APNCharacter(const FObjectInitializer& ObjectInitializer)
 	/////////////////////////////////////////////////////////////////////////////////////////
 
 	PawnComponent = CreateDefaultSubobject<UPNPawnComponent>(TEXT("PNPawnComponent"));
+	UPNAbilitySystemComponent* AbilitySystemComponent = CreateDefaultSubobject<UPNAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+	if (PawnComponent && AbilitySystemComponent)
+	{
+		PawnComponent->SetAbilitySystemComponent(AbilitySystemComponent);
+	}
+	
 	CreateDefaultSubobject<UPNStatusActorComponent>(TEXT("StatusActorComponent"));
+	CreateDefaultSubobject<UPNDetectComponent>(TEXT("DetectActorComponent"));
 }
 
 UAbilitySystemComponent* APNCharacter::GetAbilitySystemComponent() const

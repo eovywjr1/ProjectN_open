@@ -7,6 +7,7 @@
 #include "PNPawnAttributeSet.generated.h"
 
 DECLARE_MULTICAST_DELEGATE(FOutOfHpDelegate);
+DECLARE_MULTICAST_DELEGATE(FOnDamagedDelegate);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnChangedPawnAttributeDelegate, FGameplayAttribute);
 
 /**
@@ -30,6 +31,7 @@ public:
 	ATTRIBUTE_ACCESSORS(UPNPawnAttributeSet, RunSpeedMultiplier);
 	
 	mutable FOutOfHpDelegate OnOutOfHp;
+	mutable FOnDamagedDelegate OnDamagedDelegate;
 	mutable FOnChangedPawnAttributeDelegate OnChangedPawnAttributeDelegate;
 	
 protected:

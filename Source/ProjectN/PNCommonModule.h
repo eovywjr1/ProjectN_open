@@ -32,8 +32,10 @@ public:
 	FVector BoxExtent = FVector::ZeroVector;
 };
 
-enum class PNDistanceUnit : uint16
+enum class EPNDistanceUnit : uint16
 {
 	Meter = 100,
-	DefaultMeasurementUnit = 100
+	DefaultMeasurementUnit = 100 * Meter
 };
+
+extern const float CheckDetectEnemyPeriod;

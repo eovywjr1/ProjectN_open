@@ -28,6 +28,9 @@ public:
 	void SetAbilitySystemComponent(UPNAbilitySystemComponent* InAbilitySystemComponent) { AbilitySystemComponent = InAbilitySystemComponent; }
 	
 private:
+	virtual void BeginPlay() override final;
+	
+private:
 	UPROPERTY(EditDefaultsOnly, Category = "Pawn")
 	TObjectPtr<const UPNPawnData> PawnData;
 

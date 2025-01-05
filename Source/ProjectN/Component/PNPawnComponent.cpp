@@ -3,6 +3,10 @@
 
 #include "PNPawnComponent.h"
 
+#include "PNPawnData.h"
+#include "AbilitySystem/PNAbilitySet.h"
+#include "AbilitySystem/PNAbilitySystemComponent.h"
+
 UPNPawnComponent::UPNPawnComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
@@ -11,4 +15,26 @@ UPNPawnComponent::UPNPawnComponent(const FObjectInitializer& ObjectInitializer)
 
 	PawnData = nullptr;
 	AbilitySystemComponent = nullptr;
+}
+
+void UPNPawnComponent::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (AbilitySystemComponent)
+	{
+		AActor* Owner = GetOwner();
+		AbilitySystemComponent->InitAbilityActorInfo(Owner, Owner);
+
+		if (PawnData)
+		{
+			for (const UPNAbilitySet* AbilitySet : PawnData->AbilitySets)
+			{
+				if (AbilitySet)
+				{
+					AbilitySet->GiveAbilityToAbilitySystem(AbilitySystemComponent, this);
+				}
+			}
+		}
+	}
 }

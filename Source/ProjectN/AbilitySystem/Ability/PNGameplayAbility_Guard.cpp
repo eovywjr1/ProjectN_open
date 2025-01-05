@@ -15,7 +15,6 @@ UPNGameplayAbility_Guard::UPNGameplayAbility_Guard()
 	const FPNGameplayTags& GameplayTags = FPNGameplayTags::Get();
 	
 	ActivationOwnedTags.AddTag(GameplayTags.Action_Guard);
-	ActivationRequiredTags.AddTag(GameplayTags.Status_Fight);
 	ActivationRequiredTags.AddTag(GameplayTags.Action_Idle);
 }
 

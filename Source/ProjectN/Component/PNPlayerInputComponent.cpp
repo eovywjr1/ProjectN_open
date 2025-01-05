@@ -107,7 +107,15 @@ void UPNPlayerInputComponent::Input_NextLockOnTarget(const FInputActionValue& In
 void UPNPlayerInputComponent::Input_LockOn(const FInputActionValue& InputActionValue)
 {
 	bIsActivatedLockOn = !bIsActivatedLockOn;
-	Cast<APNPlayerController>(GetPawn<APawn>()->GetController())->ActivateLockOn(bIsActivatedLockOn);
+
+	if (bIsActivatedLockOn)
+	{
+		Cast<APNPlayerController>(GetPawn<APawn>()->GetController())->ActivateLockOn();
+	}
+	else
+	{
+		Cast<APNPlayerController>(GetPawn<APawn>()->GetController())->DeActivateLockOn();
+	}
 }
 
 void UPNPlayerInputComponent::Input_AbilityPressed(FGameplayTag InputTag)

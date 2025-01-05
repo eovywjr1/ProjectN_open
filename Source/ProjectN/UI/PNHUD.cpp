@@ -8,8 +8,16 @@
 void APNHUD::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	// Todo. 임시 추후 월드 진입할 때로 변경
-	HUDWidget = CreateWidget(GetOwningPlayerController(), HUDClass, FName(TEXT("HUDWidget")));
-	HUDWidget->AddToViewport();
+
+	for (TPair<EUIControllerID, FUIControllerData>& Controller : Controllers)
+	{
+		if (Controller.Value.ControllerClass)
+		{
+			Controller.Value.Controller = CreateWidget<UUserWidget>(GetWorld(), Controller.Value.ControllerClass);
+			if (Controller.Value.Controller)
+			{
+				Controller.Value.Controller->AddToViewport(Controller.Value.Layer);
+			}
+		}
+	}
 }

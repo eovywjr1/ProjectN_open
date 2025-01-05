@@ -18,7 +18,7 @@ class UGameplayTagsManager;
 struct FPNGameplayTags
 {
 public:
-	static const FPNGameplayTags& Get() { return GameplayTags; }
+	FORCEINLINE static const FPNGameplayTags& Get() { return GameplayTags; }
 
 	static void InitializeNativeTags();
 

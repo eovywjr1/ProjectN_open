@@ -1,6 +1,7 @@
 # ProjectN_open
 
 ProjectN 포트폴리오
+</br>
 https://panoramic-crocodile-955.notion.site/Project-N-1709ad5dc79a80fb9dbfc62ed78102b0?pvs=4
 
 ProjectN 개발일지 블로그 링크

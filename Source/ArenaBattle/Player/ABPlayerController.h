@@ -1,0 +1,28 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/PlayerController.h"
+#include "ABPlayerController.generated.h"
+
+/**
+ * 
+ */
+UCLASS()
+class ARENABATTLE_API AABPlayerController : public APlayerController
+{
+	GENERATED_BODY()
+	
+protected:
+	AABPlayerController();
+	
+	virtual void BeginPlay() override final;
+	
+protected:
+	UPROPERTY()
+	TSubclassOf<class UABHUDWidget> ABHUDWidgetClass;
+	
+	UPROPERTY()
+	TObjectPtr<UABHUDWidget> ABHUDWidget;
+};

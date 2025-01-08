@@ -38,7 +38,12 @@ void FPNGameplayTags::AddAllTags(UGameplayTagsManager& Manager)
 	AddTag(Action_Guard, TEXT("Action.Guard"), TEXT("Action Guard"));
 	AddTag(Action_Attack, TEXT("Action.Attack"), TEXT("Action Attack"));
 	
+	AddTag(Ability_Attack, TEXT("Ability.Attack"), TEXT("Ability Attack"));
+	
+	AddTag(GameplayEvent, TEXT("GameplayEvent"), TEXT("GameplayEvent"));
 	AddTag(GameplayEvent_AttackHitCheck, TEXT("GameplayEvent.AttackHitCheck"), TEXT("GameplayEvent AttackHitCheck"));
+	AddTag(GameplayEvent_EnableComboInput, TEXT("GameplayEvent.EnableComboInput"), TEXT("GameplayEvent EnableComboInput"));
+	AddTag(GameplayEvent_DisableComboInput, TEXT("GameplayEvent.DisableComboInput"), TEXT("GameplayEvent DisableComboInput"));
 }
 
 void FPNGameplayTags::AddTag(FGameplayTag& OutTag, const FName TagName, const FString TagComment)

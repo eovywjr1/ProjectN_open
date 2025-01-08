@@ -8,6 +8,7 @@
 #include "Component/PNCharacterMovementComponent.h"
 #include "Component/PNDetectComponent.h"
 #include "Component/PNPawnComponent.h"
+#include "Component/PNSkillComponent.h"
 #include "Component/PNStatusActorComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
@@ -83,6 +84,7 @@ APNCharacter::APNCharacter(const FObjectInitializer& ObjectInitializer)
 	
 	CreateDefaultSubobject<UPNStatusActorComponent>(TEXT("StatusActorComponent"));
 	CreateDefaultSubobject<UPNDetectComponent>(TEXT("DetectActorComponent"));
+	CreateDefaultSubobject<UPNSkillComponent>(TEXT("SkillActorComponent"));
 }
 
 UAbilitySystemComponent* APNCharacter::GetAbilitySystemComponent() const

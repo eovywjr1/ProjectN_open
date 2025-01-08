@@ -44,7 +44,12 @@ public:
 	FGameplayTag Action_Guard;
 	FGameplayTag Action_Attack;
 	
+	FGameplayTag Ability_Attack;
+	
+	FGameplayTag GameplayEvent;
 	FGameplayTag GameplayEvent_AttackHitCheck;
+	FGameplayTag GameplayEvent_EnableComboInput;
+	FGameplayTag GameplayEvent_DisableComboInput;
 	
 private:
 	void AddAllTags(UGameplayTagsManager& Manager);

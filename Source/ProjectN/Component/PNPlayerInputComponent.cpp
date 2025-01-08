@@ -40,14 +40,7 @@ void UPNPlayerInputComponent::InitializePlayerInput(UInputComponent* PlayerInput
 
 void UPNPlayerInputComponent::EnableInput(bool bIsEnable) const
 {
-	APawn* Owner = GetPawnChecked<APawn>();
-	APlayerController* PlayerController = Cast<APlayerController>(Owner->GetController());
-	if (PlayerController == nullptr)
-	{
-		return;
-	}
-
-	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer());
+	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetController<APlayerController>()->GetLocalPlayer());
 	if (Subsystem == nullptr)
 	{
 		return;
@@ -68,12 +61,6 @@ void UPNPlayerInputComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	ACharacter* Owner = GetPawn<ACharacter>();
-	if (Owner == nullptr)
-	{
-		return;
-	}
-
 	EnableInput(true);
 }
 
@@ -89,9 +76,7 @@ void UPNPlayerInputComponent::Input_Move(const FInputActionValue& InputActionVal
 
 void UPNPlayerInputComponent::Input_Look(const FInputActionValue& InputActionValue)
 {
-	APawn* Owner = GetPawnChecked<APawn>();
-	APNPlayerController* PlayerController = CastChecked<APNPlayerController>(Owner->GetController());
-	PlayerController->RotationByInput(InputActionValue.Get<FVector2D>());
+	GetController<APNPlayerController>()->RotationByInput(InputActionValue.Get<FVector2D>());
 }
 
 void UPNPlayerInputComponent::Input_NextLockOnTarget(const FInputActionValue& InputActionValue)
@@ -101,7 +86,7 @@ void UPNPlayerInputComponent::Input_NextLockOnTarget(const FInputActionValue& In
 		return;
 	}
 
-	Cast<APNPlayerController>(GetPawn<APawn>()->GetController())->SetNextPriorityLockOnTargetActor();
+	GetController<APNPlayerController>()->SetNextPriorityLockOnTargetActor();
 }
 
 void UPNPlayerInputComponent::Input_LockOn(const FInputActionValue& InputActionValue)
@@ -110,11 +95,11 @@ void UPNPlayerInputComponent::Input_LockOn(const FInputActionValue& InputActionV
 
 	if (bIsActivatedLockOn)
 	{
-		Cast<APNPlayerController>(GetPawn<APawn>()->GetController())->ActivateLockOn();
+		GetController<APNPlayerController>()->ActivateLockOn();
 	}
 	else
 	{
-		Cast<APNPlayerController>(GetPawn<APawn>()->GetController())->DeActivateLockOn();
+		GetController<APNPlayerController>()->DeActivateLockOn();
 	}
 }
 

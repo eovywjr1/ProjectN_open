@@ -25,7 +25,7 @@ public:
 
 	void OnInitializedStatus() const;
 
-	void SetDead();
+	virtual void SetDead();
 
 protected:
 	APNCharacter(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());

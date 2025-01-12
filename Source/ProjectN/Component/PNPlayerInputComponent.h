@@ -26,7 +26,7 @@ private:
 	
 public:
 	void InitializePlayerInput(UInputComponent* PlayerInputComponent);
-	void EnableInput(bool bIsEnable) const;
+	void EnableControlInput(bool bEnable) const;
 	FVector2D GetLastMovementInput() const { return LastMovementInput; }
 
 private:
@@ -40,7 +40,7 @@ private:
 	
 private:
 	UPROPERTY(EditDefaultsOnly, Category = Input)
-	TObjectPtr<class UInputMappingContext> DefaultMappingContext;
+	TObjectPtr<class UInputMappingContext> ControlMappingContext;
 	
 	UPROPERTY(EditDefaultsOnly, Category = Input)
 	TObjectPtr<class UInputMappingContext> CameraMappingContext;

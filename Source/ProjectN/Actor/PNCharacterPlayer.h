@@ -16,13 +16,15 @@ class PROJECTN_API APNCharacterPlayer : public APNCharacter
 {
 	GENERATED_BODY()
 
+public:
+	void MoveByInput(const FVector2D MovementVector);
+	
+	virtual void SetDead() override final;
+
 private:
 	APNCharacterPlayer(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 	
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override final;
-	
-public:
-	void MoveByInput(const FVector2D MovementVector);
 	
 private:
 	UPROPERTY(EditDefaultsOnly)

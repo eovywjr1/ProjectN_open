@@ -38,22 +38,17 @@ void UPNPlayerInputComponent::InitializePlayerInput(UInputComponent* PlayerInput
 	PNEnhancedInputComponent->BindAbilityActions(InputConfig, this, &ThisClass::Input_AbilityPressed, &ThisClass::Input_AbilityReleased);
 }
 
-void UPNPlayerInputComponent::EnableInput(bool bIsEnable) const
+void UPNPlayerInputComponent::EnableControlInput(bool bEnable) const
 {
 	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetController<APlayerController>()->GetLocalPlayer());
-	if (Subsystem == nullptr)
-	{
-		return;
-	}
 
-	if (bIsEnable)
+	if (bEnable)
 	{
-		Subsystem->AddMappingContext(DefaultMappingContext, 0);
-		Subsystem->AddMappingContext(CameraMappingContext, 0);
+		Subsystem->AddMappingContext(ControlMappingContext, 0);
 	}
 	else
 	{
-		Subsystem->RemoveMappingContext(DefaultMappingContext);
+		Subsystem->RemoveMappingContext(ControlMappingContext);
 	}
 }
 
@@ -61,7 +56,8 @@ void UPNPlayerInputComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	EnableInput(true);
+	ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetController<APlayerController>()->GetLocalPlayer())->AddMappingContext(CameraMappingContext, 0);
+	EnableControlInput(true);
 }
 
 void UPNPlayerInputComponent::Input_Move(const FInputActionValue& InputActionValue)

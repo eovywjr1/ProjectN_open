@@ -32,10 +32,10 @@ void APNCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 void APNCharacterPlayer::MoveByInput(const FVector2D MovementVector)
 {
 	check(Controller);
-	
+
 	bUseControllerRotationYaw = true;
 	GetCharacterMovement()->bOrientRotationToMovement = false;
-	
+
 	if (IsRun() && MovementVector.Y >= 0.0f && FMath::Abs(MovementVector.X) > 0.0f)
 	{
 		bUseControllerRotationYaw = false;
@@ -46,7 +46,14 @@ void APNCharacterPlayer::MoveByInput(const FVector2D MovementVector)
 	const FRotator YawRotation(0, Rotation.Yaw, 0);
 	const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 	const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-	
+
 	AddMovementInput(ForwardDirection, MovementVector.Y);
 	AddMovementInput(RightDirection, MovementVector.X);
+}
+
+void APNCharacterPlayer::SetDead()
+{
+	Super::SetDead();
+
+	DisableInput(Cast<APlayerController>(GetController()));
 }

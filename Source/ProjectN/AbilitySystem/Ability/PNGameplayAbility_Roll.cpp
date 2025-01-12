@@ -78,7 +78,7 @@ void UPNGameplayAbility_Roll::ActivateAbility(const FGameplayAbilitySpecHandle H
 		return;
 	}
 
-	PlayerInputComponent->EnableInput(false);
+	PlayerInputComponent->EnableControlInput(false);
 
 	if (RollActionMontage)
 	{
@@ -113,7 +113,7 @@ void UPNGameplayAbility_Roll::EndAbility(const FGameplayAbilitySpecHandle Handle
 		return;
 	}
 
-	PlayerInputComponent->EnableInput(true);
+	PlayerInputComponent->EnableControlInput(true);
 }
 
 void UPNGameplayAbility_Roll::OnCompleteCallback()

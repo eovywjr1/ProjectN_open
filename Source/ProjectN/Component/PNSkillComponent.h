@@ -17,7 +17,7 @@ public:
 	{}
 
 	const FAttackData* ComboData = nullptr;
-	TMap<FGameplayTag, FComboNode*> Children;
+	TMap<FGameplayTag, TWeakPtr<FComboNode>> Children;
 };
 
 /**
@@ -29,18 +29,18 @@ class PROJECTN_API UPNSkillComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:
-	FORCEINLINE void ClearCombo() { CurrentComboNode = RootComboNode; }
+	FORCEINLINE void ClearCombo();
 	const FAttackData* ExecuteNextCombo(const FGameplayTag NextAttackTag);
-	FORCEINLINE bool IsCurrentCombo(const FGameplayTag AttackTag) const { return CurrentComboNode->ComboData && CurrentComboNode->ComboData->AttackTag.MatchesTagExact(AttackTag); }
+	FORCEINLINE bool IsCurrentCombo(const FGameplayTag AttackTag);
 
 private:
 	UPNSkillComponent();
 	virtual void BeginPlay() override final;
 
-	FComboNode* CreateNode(const FAttackData* InComboData);
+	TWeakPtr<FComboNode> CreateNode(const FAttackData* InComboData);
 
 private:
-	TArray<TUniquePtr<FComboNode>> ComboNodes;
-	FComboNode* RootComboNode = nullptr;
-	FComboNode* CurrentComboNode = nullptr;
+	TArray<TSharedPtr<FComboNode>> ComboNodes;
+	TWeakPtr<FComboNode> RootComboNode = nullptr;
+	TWeakPtr<FComboNode> CurrentComboNode = nullptr;
 };

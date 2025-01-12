@@ -7,17 +7,38 @@
 #include "AbilitySystemInterface.h"
 #include "AbilitySystem/AttributeSet/PNWeaponAttributeSet.h"
 
+void UPNSkillComponent::ClearCombo()
+{
+	check(RootComboNode.IsValid());
+
+	CurrentComboNode = RootComboNode;
+}
+
 const FAttackData* UPNSkillComponent::ExecuteNextCombo(const FGameplayTag NextAttackTag)
 {
-	FComboNode** NextComboNode = CurrentComboNode->Children.Find(NextAttackTag);
-	if (NextComboNode == nullptr)
+	check(CurrentComboNode.IsValid());
+
+	TWeakPtr<FComboNode>* NextComboNode = CurrentComboNode.Pin()->Children.Find(NextAttackTag);
+	if (NextComboNode == nullptr || !NextComboNode->IsValid())
 	{
 		return nullptr;
 	}
 
 	CurrentComboNode = *NextComboNode;
 
-	return CurrentComboNode->ComboData;
+	return CurrentComboNode.Pin()->ComboData;
+}
+
+bool UPNSkillComponent::IsCurrentCombo(const FGameplayTag AttackTag)
+{
+	if (!CurrentComboNode.IsValid())
+	{
+		ClearCombo();
+		return false;
+	}
+
+	const FAttackData* CurrentComboData = CurrentComboNode.Pin()->ComboData;
+	return CurrentComboData && CurrentComboData->AttackTag.MatchesTagExact(AttackTag);
 }
 
 UPNSkillComponent::UPNSkillComponent()
@@ -30,32 +51,35 @@ void UPNSkillComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
+	check(RootComboNode.IsValid());
+
 	if (IAbilitySystemInterface* OwnerAbilitySystemInterface = GetOwner<IAbilitySystemInterface>())
 	{
 		if (const UPNWeaponAttributeSet* WeaponAttributeSet = OwnerAbilitySystemInterface->GetAbilitySystemComponent()->GetSet<UPNWeaponAttributeSet>())
 		{
-			for(TArray<FComboData>::TConstIterator Iter = WeaponAttributeSet->GetComboDatas(); Iter; ++Iter)
+			for (TArray<FComboData>::TConstIterator Iter = WeaponAttributeSet->GetComboDatas(); Iter; ++Iter)
 			{
-				FComboNode* CurrentNode = RootComboNode;
+				FComboNode* CurrentNode = RootComboNode.Pin().Get();
 
 				for (const FAttackData& AttackData : Iter->ComboAttackDatas)
 				{
-					FComboNode** ChildComboNode = CurrentNode->Children.Find(AttackData.AttackTag);
+					TWeakPtr<FComboNode>* ChildComboNode = CurrentNode->Children.Find(AttackData.AttackTag);
 					if (ChildComboNode == nullptr)
 					{
 						ChildComboNode = &CurrentNode->Children.Add(AttackData.AttackTag, CreateNode(&AttackData));
 					}
 
-					CurrentNode = *ChildComboNode;
+					check(ChildComboNode->IsValid());
+					CurrentNode = ChildComboNode->Pin().Get();
 				}
 			}
 		}
 	}
 }
 
-FComboNode* UPNSkillComponent::CreateNode(const FAttackData* InComboData)
+TWeakPtr<FComboNode> UPNSkillComponent::CreateNode(const FAttackData* InComboData)
 {
-	ComboNodes.Add(MakeUnique<FComboNode>(InComboData));
+	ComboNodes.Add(MakeShared<FComboNode>(InComboData));
 
-	return ComboNodes.Last().Get();
+	return ComboNodes.Last();
 }

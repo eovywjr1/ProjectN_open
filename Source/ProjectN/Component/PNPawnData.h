@@ -6,21 +6,20 @@
 #include "Engine/DataAsset.h"
 #include "PNPawnData.generated.h"
 
-class UPNInputConfig;
 class UPNAbilitySet;
 
 /**
  * 
  */
-UCLASS(BlueprintType, Const)
+UCLASS(Const)
 class PROJECTN_API UPNPawnData : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
 	
-public:
-	UPROPERTY(EditDefaultsOnly)
-	TObjectPtr<UPNInputConfig> InputConfig;
+private:
+	virtual FPrimaryAssetId GetPrimaryAssetId() const override { return FPrimaryAssetId("PawnData", GetFName()); };
 	
+public:
 	UPROPERTY(EditDefaultsOnly)
 	TArray<TObjectPtr<UPNAbilitySet>> AbilitySets;	
 };

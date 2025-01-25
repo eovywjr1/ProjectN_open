@@ -14,6 +14,6 @@ class PROJECTN_API UPNAssetManager : public UAssetManager
 {
 	GENERATED_BODY()
 	
-public:
-	UPNAssetManager();
+private:
+	virtual void StartInitialLoading() override final;
 };

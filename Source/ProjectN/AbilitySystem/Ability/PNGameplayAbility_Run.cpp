@@ -12,6 +12,7 @@
 UPNGameplayAbility_Run::UPNGameplayAbility_Run()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
+	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::LocalOnly;
 
 	ActivationOwnedTags.AddTag(FPNGameplayTags::Get().Action_Run);
 }
@@ -22,12 +23,12 @@ void UPNGameplayAbility_Run::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 
 	APNCharacter* Avatar = Cast<APNCharacter>(ActorInfo->AvatarActor.Get());
 	check(Avatar);
-	
+
 	UAbilitySystemComponent* AbilitySystemComponent = Avatar->GetAbilitySystemComponent();
 	check(AbilitySystemComponent);
-	
-	Avatar->SetMaxWalkSpeed(Avatar->GetMaxWalkSpeed() * AbilitySystemComponent->GetSet<UPNPawnAttributeSet>()->GetRunSpeedMultiplier());
 
+	Avatar->SetMaxWalkSpeed(Avatar->GetMaxWalkSpeed() * AbilitySystemComponent->GetSet<UPNPawnAttributeSet>()->GetRunSpeedMultiplier());
+	
 	if (RunActionMontage)
 	{
 		UAbilityTask_PlayMontageAndWait* RunMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("Run"), RunActionMontage);
@@ -41,12 +42,12 @@ void UPNGameplayAbility_Run::EndAbility(const FGameplayAbilitySpecHandle Handle,
 {
 	APNCharacter* Avatar = Cast<APNCharacter>(ActorInfo->AvatarActor.Get());
 	check(Avatar);
-	
+
 	UAbilitySystemComponent* AbilitySystemComponent = Avatar->GetAbilitySystemComponent();
 	check(AbilitySystemComponent);
-	
-	Avatar->SetMaxWalkSpeed(Avatar->GetMaxWalkSpeed() / AbilitySystemComponent->GetSet<UPNPawnAttributeSet>()->GetRunSpeedMultiplier());
 
+	Avatar->SetMaxWalkSpeed(Avatar->GetMaxWalkSpeed() / AbilitySystemComponent->GetSet<UPNPawnAttributeSet>()->GetRunSpeedMultiplier());
+	
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 

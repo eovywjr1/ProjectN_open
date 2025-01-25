@@ -3,14 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "AbilitySystemInterface.h"
 #include "GameFramework/Character.h"
+#include "Interface/PNAbilitySystemInterface.h"
 #include "PNCharacter.generated.h"
 
 class UPNPawnComponent;
 
 UCLASS(config=Game)
-class APNCharacter : public ACharacter, public IAbilitySystemInterface
+class APNCharacter : public ACharacter, public IPNAbilitySystemInterface
 {
 	GENERATED_BODY()
 
@@ -22,6 +22,9 @@ public:
 
 	void SetMaxWalkSpeed(const float InMaxSpeed);
 	float GetMaxWalkSpeed() const;
+	
+	UFUNCTION(Server, Reliable)
+	void ServerSetMaxWalkSpeed(const float InMaxSpeed);
 
 	void OnInitializedStatus() const;
 

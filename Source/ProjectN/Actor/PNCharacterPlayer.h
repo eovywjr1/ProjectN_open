@@ -22,11 +22,19 @@ public:
 	virtual void SetDead() override final;
 
 private:
-	APNCharacterPlayer(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+	APNCharacterPlayer();
 	
-	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override final;
+	virtual void Tick(float DeltaSeconds) override final;
+	virtual void PossessedBy(AController* NewController) override final;
+	virtual void OnRep_PlayerState() override final;
+	
+	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+	
+	void InitialComponents();
 	
 private:
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UPNPlayerInputComponent> PNPlayerInputComponent;
+	
+	float RunTargetRotationYaw = 0.0f;
 };

@@ -7,28 +7,35 @@
 #include "PNEnhancedInputComponent.h"
 #include "PNGameplayTags.h"
 #include "PNPawnComponent.h"
-#include "PNPawnData.h"
 #include "AbilitySystem/PNAbilitySystemComponent.h"
 #include "Actor/PNCharacterPlayer.h"
 #include "Input/PNInputConfig.h"
+#include "InputMappingContext.h"
+#include "Engine/AssetManager.h"
 #include "Player/PNPlayerController.h"
 
 UPNPlayerInputComponent::UPNPlayerInputComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
-{}
+{
+	bWantsInitializeComponent = true;
+}
 
 void UPNPlayerInputComponent::InitializePlayerInput(UInputComponent* PlayerInputComponent)
 {
-	const UPNPawnComponent* PawnComponent = GetPawn<APawn>()->FindComponentByClass<UPNPawnComponent>();
-	check(PawnComponent);
-	const UPNPawnData* PawnData = PawnComponent->GetPawnData();
-	check(PawnData);
-	const UPNInputConfig* InputConfig = PawnData->InputConfig;
-	check(InputConfig);
+	if (PlayerInputComponent == nullptr)
+	{
+		return;
+	}
+
+	APlayerController* PlayerController = GetController<APlayerController>();
+	if (PlayerController->IsLocalController())
+	{
+		ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer())->AddMappingContext(CameraMappingContext, 0);
+		EnableControlInput(true);
+	}
 
 	const FPNGameplayTags& GameplayTags = FPNGameplayTags::Get();
 	UPNEnhancedInputComponent* PNEnhancedInputComponent = Cast<UPNEnhancedInputComponent>(PlayerInputComponent);
-	check(PNEnhancedInputComponent);
 
 	PNEnhancedInputComponent->BindNativeAction(InputConfig, GameplayTags.InputTag_Move, ETriggerEvent::Triggered, this, &ThisClass::Input_Move);
 	PNEnhancedInputComponent->BindNativeAction(InputConfig, GameplayTags.InputTag_Look, ETriggerEvent::Triggered, this, &ThisClass::Input_Look);
@@ -40,7 +47,18 @@ void UPNPlayerInputComponent::InitializePlayerInput(UInputComponent* PlayerInput
 
 void UPNPlayerInputComponent::EnableControlInput(bool bEnable) const
 {
-	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetController<APlayerController>()->GetLocalPlayer());
+	APlayerController* PlayerController = GetController<APlayerController>();
+	if (PlayerController == nullptr)
+	{
+		return;
+	}
+
+	if (!PlayerController->IsLocalController())
+	{
+		return;
+	}
+
+	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer());
 
 	if (bEnable)
 	{
@@ -52,12 +70,44 @@ void UPNPlayerInputComponent::EnableControlInput(bool bEnable) const
 	}
 }
 
-void UPNPlayerInputComponent::BeginPlay()
+void UPNPlayerInputComponent::InitializeComponent()
 {
-	Super::BeginPlay();
-
-	ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetController<APlayerController>()->GetLocalPlayer())->AddMappingContext(CameraMappingContext, 0);
-	EnableControlInput(true);
+	Super::InitializeComponent();
+	
+	const UAssetManager& AssetManager = UAssetManager::Get();
+	
+	{
+		FSoftObjectPtr AssetPtr(AssetManager.GetPrimaryAssetPath(FPrimaryAssetId(FName(TEXT("PlayerInput")), FName(TEXT("IMC_Control")))));
+		if(AssetPtr.IsPending())
+		{
+			AssetPtr.LoadSynchronous();
+		}
+		
+		ControlMappingContext = Cast<UInputMappingContext>(AssetPtr.Get());
+		check(ControlMappingContext);
+	}
+	
+	{
+		FSoftObjectPtr AssetPtr(AssetManager.GetPrimaryAssetPath(FPrimaryAssetId(FName(TEXT("PlayerInput")), FName(TEXT("IMC_Camera")))));
+		if(AssetPtr.IsPending())
+		{
+			AssetPtr.LoadSynchronous();
+		}
+		
+		CameraMappingContext = Cast<UInputMappingContext>(AssetPtr.Get());
+		check(CameraMappingContext);
+	}
+	
+	{
+		FSoftObjectPtr AssetPtr(AssetManager.GetPrimaryAssetPath(FPrimaryAssetId(FName(TEXT("PlayerInput")), FName(TEXT("DA_PlayerInputConfig")))));
+		if(AssetPtr.IsPending())
+		{
+			AssetPtr.LoadSynchronous();
+		}
+		
+		InputConfig = Cast<UPNInputConfig>(AssetPtr.Get());
+		check(InputConfig);
+	}
 }
 
 void UPNPlayerInputComponent::Input_Move(const FInputActionValue& InputActionValue)

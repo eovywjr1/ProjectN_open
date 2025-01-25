@@ -27,18 +27,19 @@ public:
 
 private:
 	UPNDetectComponent();
-	virtual void BeginPlay() override final;
+	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction) override final;
 	
 	void UpdateDetectedEnemy();
 	void DetectEnemy(TArray<const AActor*>& InSortedDetectedEnemies) const;
 	bool IsDetectableEnemy(const AActor* Enemy) const;
 	void SetDetectedEnemy(const AActor* InDetectedEnemy);
 	
+	void DetectInteractableActor() const;
+	
 public:
 	FOnDetectedDelegate OnDetectedDelegate;
 	
 private:
 	TObjectPtr<const AActor> DetectedEnemy = nullptr;
-	FTimerHandle UpdateDetectEnemyTimerHandle;
 	float CheckDetectEnemyDistance;
 };

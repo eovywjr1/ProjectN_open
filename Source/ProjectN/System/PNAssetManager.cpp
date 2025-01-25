@@ -4,8 +4,9 @@
 #include "System/PNAssetManager.h"
 #include "PNGameplayTags.h"
 
-UPNAssetManager::UPNAssetManager()
-	: Super()
+void UPNAssetManager::StartInitialLoading()
 {
+	Super::StartInitialLoading();
+	
 	FPNGameplayTags::InitializeNativeTags();
 }

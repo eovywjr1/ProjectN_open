@@ -53,6 +53,4 @@ void UPNPawnAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffect
 		Data.Target.AddLooseGameplayTag(FPNGameplayTags::Get().Status_Dead);
 		OnOutOfHp.Broadcast();
 	}
-
-	OnChangedPawnAttributeDelegate.Broadcast(Data.EvaluatedData.Attribute);
 }

@@ -7,7 +7,6 @@
 #include "PNGameplayTags.h"
 #include "AbilitySystem/PNAbilitySystemComponent.h"
 #include "AbilitySystem/AttributeSet/PNPlayerAttributeSet.h"
-#include "AbilitySystem/AttributeSet/PNWeaponAttributeSet.h"
 #include "Actor/PNCharacter.h"
 #include "DataTable/EquipmentDataTable.h"
 #include "DataTable/StatusDataTable.h"
@@ -82,14 +81,6 @@ void UPNStatusActorComponent::UnApplyStatusFromEquipment(const EEquipSlotType Eq
 	ActiveEquipStatusEffectHandles.Remove(EquipSlot);
 }
 
-void UPNStatusActorComponent::OnPawnAttributeSetChanged(FGameplayAttribute Attribute)
-{
-	if (APlayerController* PlayerController = GetWorld()->GetFirstPlayerController())
-	{
-		Cast<APNHUD>(PlayerController->GetHUD())->OnStatusChangedDelegate.Broadcast(FObjectKey(GetOwner()), GetStatusType(Attribute));
-	}
-}
-
 void UPNStatusActorComponent::RequestHeal(const float HealAmount)
 {
 	if (HealAmount <= 0.0f)
@@ -97,7 +88,7 @@ void UPNStatusActorComponent::RequestHeal(const float HealAmount)
 		return;
 	}
 
-	IAbilitySystemInterface* OwnerAbilitySystemInterface = Cast<IAbilitySystemInterface>(GetOwner());
+	IPNAbilitySystemInterface* OwnerAbilitySystemInterface = Cast<IPNAbilitySystemInterface>(GetOwner());
 	check(OwnerAbilitySystemInterface);
 
 	UPNAbilitySystemComponent* AbilitySystemComponent = Cast<UPNAbilitySystemComponent>(OwnerAbilitySystemInterface->GetAbilitySystemComponent());
@@ -116,36 +107,39 @@ void UPNStatusActorComponent::RequestHeal(const float HealAmount)
 
 bool UPNStatusActorComponent::IsDead() const
 {
-	APNCharacter* Owner = GetOwner<APNCharacter>();
-	check(Owner);
-
-	UAbilitySystemComponent* AbilitySystemComponent = Owner->GetAbilitySystemComponent();
-	check(AbilitySystemComponent);
-
-	return AbilitySystemComponent->HasMatchingGameplayTag(FPNGameplayTags::Get().Status_Dead);
-}
-
-void UPNStatusActorComponent::BeginPlay()
-{
-	Super::BeginPlay();
-
-	APNCharacter* Owner = GetOwner<APNCharacter>();
-	check(Owner);
-
-	UAbilitySystemComponent* AbilitySystemComponent = Owner->GetAbilitySystemComponent();
-	check(AbilitySystemComponent);
-
-	// Todo. 임시로 생성자에서 설정, 추후 무기 장착/획득할 때 넣어야 함
-	if (TSubclassOf<UPNWeaponAttributeSet> WeaponAttributeSetClass = LoadClass<UPNWeaponAttributeSet>(this, TEXT("/Script/Engine.Blueprint'/Game/ProjectN/Blueprints/AttributeSet/BP_BasicWeaponAttributeSet.BP_BasicWeaponAttributeSet_C'")))
+	IPNAbilitySystemInterface* AbilitySystemInterface = GetOwner<IPNAbilitySystemInterface>();
+	if (UAbilitySystemComponent* AbilitySystemComponent = AbilitySystemInterface->GetAbilitySystemComponent())
 	{
-		if (UPNWeaponAttributeSet* WeaponAttributeSet = NewObject<UPNWeaponAttributeSet>(this, WeaponAttributeSetClass))
-		{
-			AbilitySystemComponent->AddSpawnedAttribute(WeaponAttributeSet);
-		}
+		return AbilitySystemComponent->HasMatchingGameplayTag(FPNGameplayTags::Get().Status_Dead);
 	}
 
+	return false;
+}
+
+UPNStatusActorComponent::UPNStatusActorComponent()
+{
+	bWantsInitializeComponent = true;
+}
+
+void UPNStatusActorComponent::InitializeComponent()
+{
+	Super::InitializeComponent();
+	
+	if (IPNAbilitySystemInterface* AbilitySystemInterface = GetOwner<IPNAbilitySystemInterface>())
+	{
+		AbilitySystemInterface->OnInitializeAbilitySystemDelegate.AddUObject(this, &ThisClass::OnInitializeAbilitySystem);
+	}
+}
+
+void UPNStatusActorComponent::OnInitializeAbilitySystem()
+{
+	UAbilitySystemComponent* AbilitySystemComponent = GetOwner<IPNAbilitySystemInterface>()->GetAbilitySystemComponent();
+	check(AbilitySystemComponent);
+
+	AActor* Owner = GetOwner();
+	APNCharacter* OwnerCast = Cast<APNCharacter>(Owner);
 	// Todo. 데이터테이블과 연동해야 함	
-	if (Owner->GetController()->IsPlayerController())
+	if (OwnerCast && OwnerCast->GetController() && OwnerCast->GetController()->IsPlayerController())
 	{
 		AbilitySystemComponent->InitStats(UPNPlayerAttributeSet::StaticClass(), nullptr);
 	}
@@ -157,12 +151,6 @@ void UPNStatusActorComponent::BeginPlay()
 	const UPNPawnAttributeSet* PawnAttributeSet = AbilitySystemComponent->GetSet<UPNPawnAttributeSet>();
 	PawnAttributeSet->OnOutOfHp.AddUObject(this, &ThisClass::OnOutOfHp);
 	PawnAttributeSet->OnDamagedDelegate.AddUObject(this, &ThisClass::OnDamaged);
-	PawnAttributeSet->OnChangedPawnAttributeDelegate.AddUObject(this, &ThisClass::OnPawnAttributeSetChanged);
-
-	if (APlayerController* PlayerController = GetWorld()->GetFirstPlayerController())
-	{
-		Cast<APNHUD>(PlayerController->GetHUD())->OnInitStatusDelegate.Broadcast(FObjectKey(GetOwner()));
-	}
 
 	AbilitySystemComponent->AddLooseGameplayTag(FPNGameplayTags::Get().Status_Peace);
 	FGameplayEventData PayLoad;
@@ -173,7 +161,11 @@ void UPNStatusActorComponent::BeginPlay()
 	AbilitySystemComponent->RegisterGameplayTagEvent(FPNGameplayTags::Get().Action_Attack, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &ThisClass::OnActionTagChanged);
 	AbilitySystemComponent->RegisterGameplayTagEvent(FPNGameplayTags::Get().Action_Guard, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &ThisClass::OnActionTagChanged);
 
-	Owner->OnInitializedStatus();
+	// Todo. 추후 OnInitializedStatus를 Interface로 선언해야 할수도?
+	if (OwnerCast)
+	{
+		OwnerCast->OnInitializedStatus();
+	}
 }
 
 FGameplayAttribute UPNStatusActorComponent::GetStatusAttribute(const EStatusType StatusType) const
@@ -236,7 +228,7 @@ void UPNStatusActorComponent::SetPeaceOrFightStatus(const FGameplayTag StatusTag
 		return;
 	}
 
-	if (IAbilitySystemInterface* OwnerAbilitySystemInterface = GetOwner<IAbilitySystemInterface>())
+	if (IPNAbilitySystemInterface* OwnerAbilitySystemInterface = GetOwner<IPNAbilitySystemInterface>())
 	{
 		UAbilitySystemComponent* AbilitySystemComponent = OwnerAbilitySystemInterface->GetAbilitySystemComponent();
 		check(AbilitySystemComponent);

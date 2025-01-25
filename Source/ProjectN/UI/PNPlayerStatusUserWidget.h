@@ -15,22 +15,26 @@ enum class EStatusType : uint8;
 /**
  * 
  */
+ 
+// Todo. 추후 UPNPlayerStatusUserWidget->UPNStatusUserWidget으로 변경해야 함
 UCLASS()
 class PROJECTN_API UPNPlayerStatusUserWidget : public UUserWidget
 {
 	GENERATED_BODY()
-	
+
+public:
+	FORCEINLINE void SetTargetObject(FObjectKey InTargetObjectKey) { TargetObjectKey = InTargetObjectKey; }
+
 private:
 	virtual void NativeOnInitialized() override final;
-	
-	void OnStatusChanged(const FObjectKey TargetObjectKey, const EStatusType InStatusType);
-	void OnInitStatus(const FObjectKey TargetObjectKey);
-	void UpdateStatus(const FObjectKey TargetObjectKey) const;
-	
+	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override final;
+
 private:
 	UPROPERTY(EditAnywhere)
 	EStatusType StatusType;
-	
+
 	UPROPERTY()
 	TObjectPtr<UProgressBar> ProgressBar;
+
+	FObjectKey TargetObjectKey;
 };

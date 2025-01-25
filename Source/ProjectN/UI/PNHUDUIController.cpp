@@ -4,6 +4,8 @@
 #include "UI/PNHUDUIController.h"
 
 #include "PNHUD.h"
+#include "PNInteractionUserWidget.h"
+#include "PNPlayerStatusUserWidget.h"
 #include "PNTargetMarkerUserWidget.h"
 
 void UPNHUDUIController::NativeOnInitialized()
@@ -15,6 +17,9 @@ void UPNHUDUIController::NativeOnInitialized()
 
 	HUD->OnSetLockOnTargetDelegate.AddUObject(this, &ThisClass::SetLockOnTarget);
 	HUD->OnDeactivatedLockOnDelegate.AddUObject(this, &ThisClass::OnDeactivatedLockOn);
+	
+	HUD->OnDetectedInteractableActorDelegate.AddUObject(InteractionWidget, &UPNInteractionUserWidget::OnDetectedInteractableActor);
+	HUD->OnUnDetectedInteractableActorDelegate.AddUObject(InteractionWidget, &UPNInteractionUserWidget::OnUnDetectedInteractableActor);
 }
 
 void UPNHUDUIController::NativeConstruct()
@@ -23,6 +28,8 @@ void UPNHUDUIController::NativeConstruct()
 	
 	// Todo. 임시 추후 월드 진입할 때로 변경
 	SetVisibility(ESlateVisibility::Visible);
+	
+	PlayerHpWidget->SetTargetObject(GetOwningPlayerPawn());
 }
 
 void UPNHUDUIController::SetLockOnTarget(FObjectKey LockOnTargetObjectKey)

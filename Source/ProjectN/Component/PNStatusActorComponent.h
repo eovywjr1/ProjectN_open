@@ -30,14 +30,16 @@ public:
 	bool IsDead() const;
 
 private:
-	virtual void BeginPlay() override final;
+	UPNStatusActorComponent();
+	virtual void InitializeComponent() override final;
+	
+	void OnInitializeAbilitySystem();
 	
 	FGameplayAttribute GetStatusAttribute(const EStatusType StatusType) const;
 	EStatusType GetStatusType(const FGameplayAttribute Attribute) const;
 	
 	void OnOutOfHp() const;
 	void OnDamaged();
-	void OnPawnAttributeSetChanged(FGameplayAttribute Attribute);
 	
 	void SetPeaceOrFightStatus(const FGameplayTag StatusTag);
 	

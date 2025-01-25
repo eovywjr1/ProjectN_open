@@ -29,13 +29,13 @@ class PROJECTN_API UPNSkillComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:
+	void InitComboTree();
 	FORCEINLINE void ClearCombo();
 	const FAttackData* ExecuteNextCombo(const FGameplayTag NextAttackTag);
 	FORCEINLINE bool IsCurrentCombo(const FGameplayTag AttackTag);
-
+	
 private:
 	UPNSkillComponent();
-	virtual void BeginPlay() override final;
 
 	TWeakPtr<FComboNode> CreateNode(const FAttackData* InComboData);
 

@@ -1,9 +1,6 @@
 #include "PNInputConfig.h"
 #include "PNLogChannels.h"
 
-UPNInputConfig::UPNInputConfig(const FObjectInitializer& ObjectInitializer)
-{}
-
 const UInputAction* UPNInputConfig::FindNativeInputActionForTag(const FGameplayTag& InputTag) const
 {
 	for (const FPNInputAction& Action : NativeInputActions)

@@ -3,9 +3,12 @@
 
 #include "Component/PNEquipmentComponent.h"
 
+#include "PNSkillComponent.h"
 #include "PNStatusActorComponent.h"
+#include "AbilitySystem/AttributeSet/PNWeaponAttributeSet.h"
 #include "DataTable/EquipmentDataTable.h"
 #include "DataTable/ItemDataTable.h"
+#include "Interface/PNAbilitySystemInterface.h"
 #include "Subsystem/PNGameDataSubsystem.h"
 
 void UPNEquipmentComponent::RequestEquip(const FName ItemKey)
@@ -46,11 +49,33 @@ void UPNEquipmentComponent::RequestUnEquip(const EEquipSlotType UnEquipSlotType)
 
 UPNEquipmentComponent::UPNEquipmentComponent()
 {
+	bWantsInitializeComponent = true;
+
 	UEnum* EnumPtr = StaticEnum<EEquipSlotType>();
 	for (int32 i = 1; i < EnumPtr->NumEnums() - 1; ++i)
 	{
 		EEquipSlotType EnumValue = static_cast<EEquipSlotType>(i);
 		EquipSlots.Add(EnumValue, FName());
+	}	
+}
+
+void UPNEquipmentComponent::InitializeComponent()
+{
+	Super::InitializeComponent();
+	
+	GetOwner<IPNAbilitySystemInterface>()->OnInitializeAbilitySystemDelegate.AddUObject(this, &ThisClass::OnInitializeAbilitySystem);
+}
+
+void UPNEquipmentComponent::OnInitializeAbilitySystem()
+{
+	// Todo. 추후 무기 장착/획득할 때 넣어야 함
+	if (TSubclassOf<UPNWeaponAttributeSet> WeaponAttributeSetClass = LoadClass<UPNWeaponAttributeSet>(this, TEXT("/Script/Engine.Blueprint'/Game/ProjectN/Blueprints/AttributeSet/BP_BasicWeaponAttributeSet.BP_BasicWeaponAttributeSet_C'")))
+	{
+		if (UPNWeaponAttributeSet* WeaponAttributeSet = NewObject<UPNWeaponAttributeSet>(this, WeaponAttributeSetClass))
+		{
+			GetOwner<IPNAbilitySystemInterface>()->GetAbilitySystemComponent()->AddSpawnedAttribute(WeaponAttributeSet);
+			GetOwner()->FindComponentByClass<UPNSkillComponent>()->InitComboTree();
+		}
 	}
 }
 

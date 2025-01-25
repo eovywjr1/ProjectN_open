@@ -19,10 +19,11 @@ public:
 	bool IsIdle() const;
 
 private:
-	virtual void BeginPlay() override final;
+	virtual void InitializeComponent() override final;
+
 	virtual void OnMovementUpdated(float DeltaSeconds, const FVector& OldLocation, const FVector& OldVelocity) override final;
-	
 	void OnUpdateTag(const FGameplayTag GameplayTag, int32 Count) const;
+	void OnInitializeAbilitySystem();
 	
 private:
 	FDelegateHandle OnActionTagDelegateHandle;

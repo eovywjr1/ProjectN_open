@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "PNCharacter.h"
+#include "Actor/PNCharacter.h"
 #include "PNCharacterNonPlayer.generated.h"
 
 /**
@@ -15,8 +15,5 @@ class PROJECTN_API APNCharacterNonPlayer : public APNCharacter
 	GENERATED_BODY()
 	
 private:
-	APNCharacterNonPlayer(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
-	
-protected:
-	virtual void PossessedBy(AController* NewController) override;
+	APNCharacterNonPlayer();
 };

@@ -3,9 +3,9 @@
 
 #include "Component/PNSkillComponent.h"
 
-#include "AbilitySystemComponent.h"
-#include "AbilitySystemInterface.h"
+#include "AbilitySystem/PNAbilitySystemComponent.h"
 #include "AbilitySystem/AttributeSet/PNWeaponAttributeSet.h"
+#include "Interface/PNAbilitySystemInterface.h"
 
 void UPNSkillComponent::ClearCombo()
 {
@@ -43,36 +43,33 @@ bool UPNSkillComponent::IsCurrentCombo(const FGameplayTag AttackTag)
 
 UPNSkillComponent::UPNSkillComponent()
 {
+	bWantsInitializeComponent = true;
+	
 	RootComboNode = CreateNode(nullptr);
 	CurrentComboNode = RootComboNode;
 }
 
-void UPNSkillComponent::BeginPlay()
+void UPNSkillComponent::InitComboTree()
 {
-	Super::BeginPlay();
-
 	check(RootComboNode.IsValid());
 
-	if (IAbilitySystemInterface* OwnerAbilitySystemInterface = GetOwner<IAbilitySystemInterface>())
+	const UPNWeaponAttributeSet* WeaponAttributeSet = GetOwner<IPNAbilitySystemInterface>()->GetAbilitySystemComponent()->GetSet<UPNWeaponAttributeSet>();
+	check(WeaponAttributeSet);
+
+	for (TArray<FComboData>::TConstIterator Iter = WeaponAttributeSet->GetComboDatas(); Iter; ++Iter)
 	{
-		if (const UPNWeaponAttributeSet* WeaponAttributeSet = OwnerAbilitySystemInterface->GetAbilitySystemComponent()->GetSet<UPNWeaponAttributeSet>())
+		FComboNode* CurrentNode = RootComboNode.Pin().Get();
+
+		for (const FAttackData& AttackData : Iter->ComboAttackDatas)
 		{
-			for (TArray<FComboData>::TConstIterator Iter = WeaponAttributeSet->GetComboDatas(); Iter; ++Iter)
+			TWeakPtr<FComboNode>* ChildComboNode = CurrentNode->Children.Find(AttackData.AttackTag);
+			if (ChildComboNode == nullptr)
 			{
-				FComboNode* CurrentNode = RootComboNode.Pin().Get();
-
-				for (const FAttackData& AttackData : Iter->ComboAttackDatas)
-				{
-					TWeakPtr<FComboNode>* ChildComboNode = CurrentNode->Children.Find(AttackData.AttackTag);
-					if (ChildComboNode == nullptr)
-					{
-						ChildComboNode = &CurrentNode->Children.Add(AttackData.AttackTag, CreateNode(&AttackData));
-					}
-
-					check(ChildComboNode->IsValid());
-					CurrentNode = ChildComboNode->Pin().Get();
-				}
+				ChildComboNode = &CurrentNode->Children.Add(AttackData.AttackTag, CreateNode(&AttackData));
 			}
+
+			check(ChildComboNode->IsValid());
+			CurrentNode = ChildComboNode->Pin().Get();
 		}
 	}
 }

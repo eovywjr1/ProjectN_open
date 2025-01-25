@@ -20,14 +20,15 @@ public:
 };
 
 UCLASS(Const)
-class UPNInputConfig : public UDataAsset
+class UPNInputConfig : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
 
 public:
-	UPNInputConfig(const FObjectInitializer& ObjectInitializer);
-
 	const UInputAction* FindNativeInputActionForTag(const FGameplayTag& InputTag) const;
+	
+private:
+	virtual FPrimaryAssetId GetPrimaryAssetId() const override { return FPrimaryAssetId("PlayerInput", GetFName()); };
 
 public:
 	UPROPERTY(EditDefaultsOnly)

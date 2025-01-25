@@ -3,11 +3,19 @@
 #include "CoreMinimal.h"
 #include "PNCommonModule.generated.h"
 
+extern const float CheckDetectEnemyPeriod;
+
 UENUM(BlueprintType)
 enum class EHitBoxShape : uint8
 {
 	Box,
 	Cone
+};
+
+enum class EPNDistanceUnit : uint16
+{
+	Meter = 100,
+	DefaultMeasurementUnit = 100 * Meter
 };
 
 USTRUCT(BlueprintType)
@@ -32,10 +40,11 @@ public:
 	FVector BoxExtent = FVector::ZeroVector;
 };
 
-enum class EPNDistanceUnit : uint16
+USTRUCT()
+struct FInteractionOption
 {
-	Meter = 100,
-	DefaultMeasurementUnit = 100 * Meter
+	GENERATED_BODY()
+	
+	FName InteractionDataTableKey;
+	FObjectKey InteractionTargetActorKey;
 };
-
-extern const float CheckDetectEnemyPeriod;

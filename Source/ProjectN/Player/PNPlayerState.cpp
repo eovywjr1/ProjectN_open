@@ -2,15 +2,14 @@
 
 
 #include "Player/PNPlayerState.h"
-
 #include "AbilitySystem/PNAbilitySystemComponent.h"
-
-APNPlayerState::APNPlayerState()
-{
-	AbilitySystemComponent = CreateDefaultSubobject<UPNAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
-}
 
 UAbilitySystemComponent* APNPlayerState::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
+}
+
+APNPlayerState::APNPlayerState()
+{
+	AbilitySystemComponent = CreateDefaultSubobject<UPNAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 }

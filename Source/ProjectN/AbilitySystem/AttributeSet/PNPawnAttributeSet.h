@@ -8,7 +8,6 @@
 
 DECLARE_MULTICAST_DELEGATE(FOutOfHpDelegate);
 DECLARE_MULTICAST_DELEGATE(FOnDamagedDelegate);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnChangedPawnAttributeDelegate, FGameplayAttribute);
 
 /**
  * 
@@ -32,7 +31,6 @@ public:
 	
 	mutable FOutOfHpDelegate OnOutOfHp;
 	mutable FOnDamagedDelegate OnDamagedDelegate;
-	mutable FOnChangedPawnAttributeDelegate OnChangedPawnAttributeDelegate;
 	
 protected:
 	virtual void PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData &Data) override;

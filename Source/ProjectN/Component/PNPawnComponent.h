@@ -7,6 +7,14 @@
 
 #include "PNPawnComponent.generated.h"
 
+UENUM()
+enum class EActorType : uint8
+{
+	NPC,
+	Player,
+	MAX
+};
+
 /**
  * 
  */
@@ -19,21 +27,24 @@ class PROJECTN_API UPNPawnComponent : public UPawnComponent
 {
 	GENERATED_BODY()
 	
-private:
-	UPNPawnComponent(const FObjectInitializer& ObjectInitializer);
-	
 public:
 	const UPNPawnData* GetPawnData() const { return PawnData; }
 	UPNAbilitySystemComponent* GetAbilitySystemComponent() const { return AbilitySystemComponent; }
-	void SetAbilitySystemComponent(UPNAbilitySystemComponent* InAbilitySystemComponent) { AbilitySystemComponent = InAbilitySystemComponent; }
+	void InitializeAbilitySystem(UPNAbilitySystemComponent* InAbilitySystemComponent, AActor* InOwnerActor);
 	
 private:
+	UPNPawnComponent(const FObjectInitializer& ObjectInitializer);
+	
+	virtual void InitializeComponent() override final; 
 	virtual void BeginPlay() override final;
 	
+public:
+	EActorType ActorType = EActorType::MAX;
+	
 private:
-	UPROPERTY(EditDefaultsOnly, Category = "Pawn")
-	TObjectPtr<const UPNPawnData> PawnData;
-
 	UPROPERTY()
-	TObjectPtr<UPNAbilitySystemComponent> AbilitySystemComponent;
+	TObjectPtr<const UPNPawnData> PawnData = nullptr;
+	
+	UPROPERTY()
+	TObjectPtr<UPNAbilitySystemComponent> AbilitySystemComponent = nullptr;
 };

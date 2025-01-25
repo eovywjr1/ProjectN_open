@@ -4,10 +4,12 @@
 #include "Component/PNDetectComponent.h"
 
 #include "PNCommonModule.h"
+#include "PNInteractionComponent.h"
 #include "PNPercent.h"
 #include "PNStatusActorComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "UI/PNHUD.h"
 
 // 몬스터 감지 관련 기획이 나온 후 변경될 수 있음
 constexpr float DefaultDetectAngle = 90.0f;
@@ -16,7 +18,13 @@ constexpr float LockOnCheckDetectEnemyDistance = 10.0f * static_cast<uint16>(EPN
 constexpr uint8 GridDivisionCount = 10;
 constexpr uint32 TotalGridPoints = GridDivisionCount * GridDivisionCount;
 
+constexpr float InteractDetectDistance = 2.0f * static_cast<uint16>(EPNDistanceUnit::Meter);
+
 const FPNPercent DetectVisibleAreaRate(30);
+
+#ifdef WITH_EDITOR
+static TAutoConsoleVariable<bool> InteractionDetectRangeDrawDebug(TEXT("InteractionDetectRangeDrawDebug"), false, TEXT(""), ECVF_Default);
+#endif
 
 void UPNDetectComponent::SetDetectTypeAndUpdateDetect(const EDetectType InDetectType)
 {
@@ -38,13 +46,20 @@ void UPNDetectComponent::SetDetectTypeAndUpdateDetect(const EDetectType InDetect
 
 UPNDetectComponent::UPNDetectComponent()
 	: CheckDetectEnemyDistance(DefaultCheckDetectEnemyDistance)
-{}
-
-void UPNDetectComponent::BeginPlay()
 {
-	Super::BeginPlay();
+	PrimaryComponentTick.bCanEverTick = true;
+}
 
-	GetWorld()->GetTimerManager().SetTimer(UpdateDetectEnemyTimerHandle, this, &ThisClass::UpdateDetectedEnemy, CheckDetectEnemyPeriod, true, CheckDetectEnemyPeriod);
+void UPNDetectComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	if (GetOwner<APawn>()->IsLocallyControlled())
+	{
+		DetectInteractableActor();
+
+		UpdateDetectedEnemy();
+	}
 }
 
 void UPNDetectComponent::UpdateDetectedEnemy()
@@ -232,19 +247,19 @@ bool UPNDetectComponent::IsDetectableEnemy(const AActor* Enemy) const
 			            VisiblePointCounter.Increment();
 		            }
 
-#ifdef ENABLE_DRAW_DEBUG
-		            {
-			            FScopeLock Lock(&CheckPointHitsCriticalSection);
-			            CheckPointHits.Add(Point, bHit);
-		            }
-#endif
+		            // #ifdef ENABLE_DRAW_DEBUG
+		            // 		            {
+		            // 			            FScopeLock Lock(&CheckPointHitsCriticalSection);
+		            // 			            CheckPointHits.Add(Point, bHit);
+		            // 		            }
+		            // #endif
 	            });
 
 #ifdef ENABLE_DRAW_DEBUG
 	for (const TPair<FVector, bool>& CheckPointHit : CheckPointHits)
 	{
 		const FColor PointColor = CheckPointHit.Value == false ? FColor::Green : FColor::Red;
-		DrawDebugPoint(GetWorld(), CheckPointHit.Key, 5.0f, PointColor, false, 5.0f);
+		DrawDebugPoint(GetWorld(), CheckPointHit.Key, 5.0f, PointColor, false, 0.5f);
 	}
 #endif
 
@@ -258,5 +273,72 @@ void UPNDetectComponent::SetDetectedEnemy(const AActor* InDetectedEnemy)
 	if (IsValid(DetectedEnemy))
 	{
 		OnDetectedDelegate.Broadcast();
+	}
+}
+
+void UPNDetectComponent::DetectInteractableActor() const
+{
+	APawn* Owner = GetOwner<APawn>();
+	if (!Owner->Controller->IsPlayerController())
+	{
+		return;
+	}
+
+	TArray<AActor*> OverlappingActors;
+	TArray<AActor*> ActorsToIgnore;
+	ActorsToIgnore.Add(Owner);
+
+	constexpr float HalfInteractDetectDistance = InteractDetectDistance;
+	const FVector SpherePosition = Owner->GetActorLocation() + Owner->GetActorForwardVector() * HalfInteractDetectDistance;
+	UKismetSystemLibrary::SphereOverlapActors(GetWorld(), SpherePosition, HalfInteractDetectDistance, TArray<TEnumAsByte<EObjectTypeQuery>>(), AActor::StaticClass(), ActorsToIgnore, OverlappingActors);
+
+#ifdef ENABLE_DRAW_DEBUG
+	if (InteractionDetectRangeDrawDebug->GetBool())
+	{
+		DrawDebugSphere(GetWorld(), SpherePosition, HalfInteractDetectDistance, 32, FColor::Green, false, 0.1f);
+	}
+#endif
+
+	TArray<const AActor*> InteractableActors;
+	InteractableActors.Reserve(OverlappingActors.Num());
+	for (const AActor* OverlappingActor : OverlappingActors)
+	{
+		UPNInteractionComponent* InteractComponent = OverlappingActor->FindComponentByClass<UPNInteractionComponent>();
+		if (InteractComponent == nullptr)
+		{
+			continue;
+		}
+
+		InteractableActors.Add(OverlappingActor);
+	}
+
+	bool bDetectedInteractableActor = false;
+	if (!InteractableActors.IsEmpty())
+	{
+		InteractableActors.Shrink();
+		InteractableActors.Sort([OwnerLocation = Owner->GetActorLocation()](const AActor& A, const AActor& B)
+		{
+			float DistancePlayerToA = FVector::Dist(OwnerLocation, A.GetActorLocation());
+			float DistancePlayerToB = FVector::Dist(OwnerLocation, B.GetActorLocation());
+			return DistancePlayerToA < DistancePlayerToB;
+		});
+
+		for (const AActor* const InteractableActor : InteractableActors)
+		{
+			UPNInteractionComponent* InteractComponent = InteractableActor->FindComponentByClass<UPNInteractionComponent>();
+			FInteractionOption InteractionOption;
+			if (InteractComponent->GetInteractionOption(InteractionOption))
+			{
+				bDetectedInteractableActor = true;
+				Cast<APNHUD>(GetOwner<APawn>()->GetController<APlayerController>()->GetHUD())->OnDetectedInteractableActorDelegate.Broadcast(InteractionOption);
+
+				break;
+			}
+		}
+	}
+
+	if (!bDetectedInteractableActor)
+	{
+		Cast<APNHUD>(GetOwner<APawn>()->GetController<APlayerController>()->GetHUD())->OnUnDetectedInteractableActorDelegate.Broadcast();
 	}
 }

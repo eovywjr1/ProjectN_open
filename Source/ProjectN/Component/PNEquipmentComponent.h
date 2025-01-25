@@ -19,6 +19,9 @@ public:
 
 private:
 	UPNEquipmentComponent();
+	virtual void InitializeComponent() override final;
+	
+	void OnInitializeAbilitySystem();
 	
 	void UnEquip(EEquipSlotType UnEquipSlotType);
 	

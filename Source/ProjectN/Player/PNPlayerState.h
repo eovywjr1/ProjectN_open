@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "AbilitySystemInterface.h"
 #include "GameFramework/PlayerState.h"
+#include "Interface/PNAbilitySystemInterface.h"
 #include "PNPlayerState.generated.h"
 
 class UPNAbilitySystemComponent;
@@ -13,15 +13,16 @@ class UPNAbilitySystemComponent;
  * 
  */
 UCLASS()
-class PROJECTN_API APNPlayerState : public APlayerState, public IAbilitySystemInterface
+class PROJECTN_API APNPlayerState : public APlayerState, public IPNAbilitySystemInterface
 {
 	GENERATED_BODY()
-
+	
 public:
+	FORCEINLINE virtual UAbilitySystemComponent* GetAbilitySystemComponent() const;
+	
+private:
 	APNPlayerState();
-
-	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override final;
-
+	
 private:
 	UPROPERTY()
 	TObjectPtr<UPNAbilitySystemComponent> AbilitySystemComponent;

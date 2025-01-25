@@ -11,6 +11,9 @@
  * 
  */
 
+class UInputMappingContext;
+class UPNInputConfig;
+
 struct FGameplayTag;
 struct FInputActionValue;
 
@@ -19,17 +22,16 @@ class PROJECTN_API UPNPlayerInputComponent : public UPawnComponent
 {
 	GENERATED_BODY()
 
-private:
-	UPNPlayerInputComponent(const FObjectInitializer& ObjectInitializer);
-
-	virtual void BeginPlay() override final;
-	
 public:
 	void InitializePlayerInput(UInputComponent* PlayerInputComponent);
 	void EnableControlInput(bool bEnable) const;
 	FVector2D GetLastMovementInput() const { return LastMovementInput; }
 
 private:
+	UPNPlayerInputComponent(const FObjectInitializer& ObjectInitializer);
+	
+	virtual void InitializeComponent() override final;
+
 	void Input_Move(const FInputActionValue& InputActionValue);
 	void Input_Look(const FInputActionValue& InputActionValue);
 	void Input_NextLockOnTarget(const FInputActionValue& InputActionValue);
@@ -39,11 +41,14 @@ private:
 	void Input_AbilityReleased(FGameplayTag InputTag);
 	
 private:
-	UPROPERTY(EditDefaultsOnly, Category = Input)
-	TObjectPtr<class UInputMappingContext> ControlMappingContext;
+	UPROPERTY()
+	TObjectPtr<UInputMappingContext> ControlMappingContext = nullptr;
 	
-	UPROPERTY(EditDefaultsOnly, Category = Input)
-	TObjectPtr<class UInputMappingContext> CameraMappingContext;
+	UPROPERTY()
+	TObjectPtr<UInputMappingContext> CameraMappingContext = nullptr;
+	
+	UPROPERTY()
+	TObjectPtr<UPNInputConfig> InputConfig = nullptr;
 	
 	FVector2D LastMovementInput = FVector2D::ZeroVector;
 	

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "PNCommonModule.h"
 #include "GameFramework/HUD.h"
 #include "PNHUD.generated.h"
 
@@ -37,6 +38,9 @@ DECLARE_MULTICAST_DELEGATE_OneParam(GameEvent_OnInitStatusDelegate, FObjectKey);
 DECLARE_MULTICAST_DELEGATE_OneParam(GameEvent_OnSetLockOnTargetDelegate, FObjectKey);
 DECLARE_MULTICAST_DELEGATE(GameEvent_OnDeactivatedLockOnDelegate);
 
+DECLARE_MULTICAST_DELEGATE_OneParam(GameEvent_OnDetectedInteractableActorDelegate, const FInteractionOption);
+DECLARE_MULTICAST_DELEGATE(GameEvent_OnUnDetectedInteractableActorDelegate);
+
 /**
  * 
  */
@@ -46,11 +50,11 @@ class PROJECTN_API APNHUD : public AHUD
 	GENERATED_BODY()
 	
 public:
-	GameEvent_OnStatusChangedDelegate OnStatusChangedDelegate;
-	GameEvent_OnInitStatusDelegate OnInitStatusDelegate;
-	
 	GameEvent_OnSetLockOnTargetDelegate OnSetLockOnTargetDelegate;
 	GameEvent_OnDeactivatedLockOnDelegate OnDeactivatedLockOnDelegate;
+
+	GameEvent_OnDetectedInteractableActorDelegate OnDetectedInteractableActorDelegate;
+	GameEvent_OnUnDetectedInteractableActorDelegate OnUnDetectedInteractableActorDelegate;
 	
 private:
 	virtual void BeginPlay() override final;

@@ -9,24 +9,6 @@
 
 class UAnimMontage;
 
-UCLASS()
-class UGameplayAbilityTask_RollMove : public UAbilityTask
-{
-	GENERATED_BODY()
-
-public:
-	static UGameplayAbilityTask_RollMove* CreateRollProxy(UGameplayAbility* OwningAbility, FName TaskInstanceName, float InDuration, float InDistance);
-
-	virtual void Activate() override;
-	virtual void TickTask(float DeltaTime) override final;
-
-private:
-	float Duration;
-	float Distance;
-	
-	FVector RollDirection;
-};
-
 /**
  * 
  */
@@ -52,10 +34,4 @@ private:
 private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Roll, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UAnimMontage> RollActionMontage = nullptr;
-	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Roll, Meta = (AllowPrivateAccess = "true"))
-	float RollDuration = 0.0f;
-	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Roll, Meta = (AllowPrivateAccess = "true"))
-	float RollDistance = 0.0f;
 };

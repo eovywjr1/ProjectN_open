@@ -3,12 +3,11 @@
 
 #include "Actor/PNCharacterNonPlayer.h"
 
-#include "Component/PNInteractionComponent.h"
-#include "Component/PNPawnComponent.h"
+#include "Component/PNActorExtensionComponent.h"
 
-APNCharacterNonPlayer::APNCharacterNonPlayer()
+void APNCharacterNonPlayer::PreInitializeComponents()
 {
-	CreateDefaultSubobject<UPNInteractionComponent>(TEXT("InteractionComponent"));
+	Super::PreInitializeComponents();
 	
-	PawnComponent->ActorType = EActorType::NPC;
+	CreateActorComponent(EActorType::NPC);
 }

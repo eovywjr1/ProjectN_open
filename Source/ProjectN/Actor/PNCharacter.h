@@ -7,7 +7,7 @@
 #include "Interface/PNAbilitySystemInterface.h"
 #include "PNCharacter.generated.h"
 
-class UPNPawnComponent;
+class UPNActorExtensionComponent;
 
 UCLASS(config=Game)
 class APNCharacter : public ACharacter, public IPNAbilitySystemInterface
@@ -32,10 +32,13 @@ public:
 
 protected:
 	APNCharacter(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+	
+private:
+	virtual void PostInitializeComponents() override final;
 
 protected:
-	UPROPERTY(EditAnywhere)
-	TObjectPtr<UPNPawnComponent> PawnComponent;
+	UPROPERTY()
+	TObjectPtr<UPNActorExtensionComponent> ActorExtensionComponent;
 
 private:
 	UPROPERTY(EditDefaultsOnly)

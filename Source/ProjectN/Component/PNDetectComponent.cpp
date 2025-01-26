@@ -54,11 +54,14 @@ void UPNDetectComponent::TickComponent(float DeltaTime, enum ELevelTick TickType
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (GetOwner<APawn>()->IsLocallyControlled())
+	APawn* Owner = GetOwner<APawn>();
+	if (Owner->IsLocallyControlled())
 	{
-		DetectInteractableActor();
-
-		UpdateDetectedEnemy();
+		if (Owner->IsPlayerControlled())
+		{
+			DetectInteractableActor();
+			UpdateDetectedEnemy();
+		}
 	}
 }
 
@@ -142,6 +145,11 @@ bool UPNDetectComponent::IsDetectableEnemy(const AActor* Enemy) const
 	}
 
 	UPNStatusActorComponent* StatusActorComponent = Enemy->FindComponentByClass<UPNStatusActorComponent>();
+	if(StatusActorComponent == nullptr)
+	{
+		return false;
+	}
+	
 	if (StatusActorComponent->IsDead())
 	{
 		return false;
@@ -284,13 +292,13 @@ void UPNDetectComponent::DetectInteractableActor() const
 		return;
 	}
 
-	TArray<AActor*> OverlappingActors;
 	TArray<AActor*> ActorsToIgnore;
 	ActorsToIgnore.Add(Owner);
 
 	constexpr float HalfInteractDetectDistance = InteractDetectDistance;
 	const FVector SpherePosition = Owner->GetActorLocation() + Owner->GetActorForwardVector() * HalfInteractDetectDistance;
-	UKismetSystemLibrary::SphereOverlapActors(GetWorld(), SpherePosition, HalfInteractDetectDistance, TArray<TEnumAsByte<EObjectTypeQuery>>(), AActor::StaticClass(), ActorsToIgnore, OverlappingActors);
+	TArray<FHitResult> OutHits;
+	UKismetSystemLibrary::SphereTraceMulti(GetWorld(), SpherePosition, SpherePosition, HalfInteractDetectDistance, UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel1), false, ActorsToIgnore, EDrawDebugTrace::None, OutHits, true);
 
 #ifdef ENABLE_DRAW_DEBUG
 	if (InteractionDetectRangeDrawDebug->GetBool())
@@ -299,33 +307,21 @@ void UPNDetectComponent::DetectInteractableActor() const
 	}
 #endif
 
-	TArray<const AActor*> InteractableActors;
-	InteractableActors.Reserve(OverlappingActors.Num());
-	for (const AActor* OverlappingActor : OverlappingActors)
-	{
-		UPNInteractionComponent* InteractComponent = OverlappingActor->FindComponentByClass<UPNInteractionComponent>();
-		if (InteractComponent == nullptr)
-		{
-			continue;
-		}
-
-		InteractableActors.Add(OverlappingActor);
-	}
-
 	bool bDetectedInteractableActor = false;
-	if (!InteractableActors.IsEmpty())
+	if (!OutHits.IsEmpty())
 	{
-		InteractableActors.Shrink();
-		InteractableActors.Sort([OwnerLocation = Owner->GetActorLocation()](const AActor& A, const AActor& B)
+		OutHits.Sort([OwnerLocation = Owner->GetActorLocation()](const FHitResult& A, const FHitResult& B)
 		{
-			float DistancePlayerToA = FVector::Dist(OwnerLocation, A.GetActorLocation());
-			float DistancePlayerToB = FVector::Dist(OwnerLocation, B.GetActorLocation());
+			float DistancePlayerToA = FVector::Dist(OwnerLocation, A.GetActor()->GetActorLocation());
+			float DistancePlayerToB = FVector::Dist(OwnerLocation, B.GetActor()->GetActorLocation());
 			return DistancePlayerToA < DistancePlayerToB;
 		});
 
-		for (const AActor* const InteractableActor : InteractableActors)
+		for (const FHitResult HitResult : OutHits)
 		{
-			UPNInteractionComponent* InteractComponent = InteractableActor->FindComponentByClass<UPNInteractionComponent>();
+			UPNInteractionComponent* InteractComponent = HitResult.GetActor()->FindComponentByClass<UPNInteractionComponent>();
+			check(InteractComponent);
+
 			FInteractionOption InteractionOption;
 			if (InteractComponent->GetInteractionOption(InteractionOption))
 			{

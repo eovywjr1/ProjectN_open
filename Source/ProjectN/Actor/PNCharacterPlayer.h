@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "PNCharacter.h"
+#include "Component/PNActorComponentCreatorInterface.h"
 #include "PNCharacterPlayer.generated.h"
 
 class UPNPlayerInputComponent;
@@ -12,7 +13,7 @@ class UPNPlayerInputComponent;
  * 
  */
 UCLASS()
-class PROJECTN_API APNCharacterPlayer : public APNCharacter
+class PROJECTN_API APNCharacterPlayer : public APNCharacter, public IPNActorComponentCreatorInterface
 {
 	GENERATED_BODY()
 
@@ -24,6 +25,7 @@ public:
 private:
 	APNCharacterPlayer();
 	
+	virtual void PreInitializeComponents() override final;
 	virtual void Tick(float DeltaSeconds) override final;
 	virtual void PossessedBy(AController* NewController) override final;
 	virtual void OnRep_PlayerState() override final;

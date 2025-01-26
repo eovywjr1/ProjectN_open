@@ -6,7 +6,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "PNEnhancedInputComponent.h"
 #include "PNGameplayTags.h"
-#include "PNPawnComponent.h"
+#include "PNActorExtensionComponent.h"
 #include "AbilitySystem/PNAbilitySystemComponent.h"
 #include "Actor/PNCharacterPlayer.h"
 #include "Input/PNInputConfig.h"
@@ -151,46 +151,14 @@ void UPNPlayerInputComponent::Input_LockOn(const FInputActionValue& InputActionV
 
 void UPNPlayerInputComponent::Input_AbilityPressed(FGameplayTag InputTag)
 {
-	APawn* Owner = GetPawn<APawn>();
-	if (Owner == nullptr)
-	{
-		return;
-	}
-
-	const UPNPawnComponent* PawnComponent = Owner->FindComponentByClass<UPNPawnComponent>();
-	if (PawnComponent == nullptr)
-	{
-		return;
-	}
-
-	UPNAbilitySystemComponent* ASC = PawnComponent->GetAbilitySystemComponent();
-	if (ASC == nullptr)
-	{
-		return;
-	}
-
+	const UPNActorExtensionComponent* ActorExtensionComponent = GetOwner()->FindComponentByClass<UPNActorExtensionComponent>();
+	UPNAbilitySystemComponent* ASC = ActorExtensionComponent->GetAbilitySystemComponent();
 	ASC->AbilityInputPressed(InputTag);
 }
 
 void UPNPlayerInputComponent::Input_AbilityReleased(FGameplayTag InputTag)
 {
-	APawn* Owner = GetPawn<APawn>();
-	if (Owner == nullptr)
-	{
-		return;
-	}
-
-	const UPNPawnComponent* PawnComponent = Owner->FindComponentByClass<UPNPawnComponent>();
-	if (PawnComponent == nullptr)
-	{
-		return;
-	}
-
+	const UPNActorExtensionComponent* PawnComponent = GetOwner()->FindComponentByClass<UPNActorExtensionComponent>();
 	UPNAbilitySystemComponent* ASC = PawnComponent->GetAbilitySystemComponent();
-	if (ASC == nullptr)
-	{
-		return;
-	}
-
 	ASC->AbilityInputReleased(InputTag);
 }

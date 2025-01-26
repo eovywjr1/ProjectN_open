@@ -4,16 +4,17 @@
 
 #include "CoreMinimal.h"
 #include "Actor/PNCharacter.h"
+#include "Component/PNActorComponentCreatorInterface.h"
 #include "PNCharacterNonPlayer.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class PROJECTN_API APNCharacterNonPlayer : public APNCharacter
+class PROJECTN_API APNCharacterNonPlayer : public APNCharacter, public IPNActorComponentCreatorInterface
 {
 	GENERATED_BODY()
 	
 private:
-	APNCharacterNonPlayer();
+	virtual void PreInitializeComponents() override final;
 };

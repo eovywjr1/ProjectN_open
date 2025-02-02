@@ -41,7 +41,7 @@ public:
 		return static_cast<const T*>(FoundData->Get());
 	}
 
-	static const UPNGameDataSubsystem* Get();
+	static const UPNGameDataSubsystem* Get(const UObject* WorldContextObject);
 
 private:
 	void LoadDataTable();
@@ -57,7 +57,7 @@ bool IsValidDataTableKey(const FName Key)
 		return false;
 	}
 
-	const T* DataTable = UPNGameDataSubsystem::Get()->GetData<T>(Key);
+	const T* DataTable = UPNGameDataSubsystem::Get(GetWorld())->GetData<T>(Key);
 	if (DataTable == nullptr)
 	{
 		return false;

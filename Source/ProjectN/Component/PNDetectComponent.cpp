@@ -292,13 +292,12 @@ void UPNDetectComponent::DetectInteractableActor() const
 		return;
 	}
 
-	TArray<AActor*> ActorsToIgnore;
-	ActorsToIgnore.Add(Owner);
-
 	constexpr float HalfInteractDetectDistance = InteractDetectDistance;
 	const FVector SpherePosition = Owner->GetActorLocation() + Owner->GetActorForwardVector() * HalfInteractDetectDistance;
 	TArray<FHitResult> OutHits;
-	UKismetSystemLibrary::SphereTraceMulti(GetWorld(), SpherePosition, SpherePosition, HalfInteractDetectDistance, UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel1), false, ActorsToIgnore, EDrawDebugTrace::None, OutHits, true);
+	TArray<AActor*> ActorsToIgnore;
+	ActorsToIgnore.Add(Owner);
+	UKismetSystemLibrary::SphereTraceMulti(GetWorld(), SpherePosition, SpherePosition, HalfInteractDetectDistance, UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel1), false, ActorsToIgnore, EDrawDebugTrace::None, OutHits, false);
 
 #ifdef ENABLE_DRAW_DEBUG
 	if (InteractionDetectRangeDrawDebug->GetBool())
@@ -319,14 +318,15 @@ void UPNDetectComponent::DetectInteractableActor() const
 
 		for (const FHitResult HitResult : OutHits)
 		{
-			UPNInteractionComponent* InteractComponent = HitResult.GetActor()->FindComponentByClass<UPNInteractionComponent>();
+			AActor* HitActor = HitResult.GetActor();
+			UPNInteractionComponent* InteractComponent = HitActor->FindComponentByClass<UPNInteractionComponent>();
 			check(InteractComponent);
 
-			FInteractionOption InteractionOption;
-			if (InteractComponent->GetInteractionOption(InteractionOption))
+			FName InteractionDataTableKey = InteractComponent->GetInteractionKey();
+			if (!InteractionDataTableKey.IsNone())
 			{
 				bDetectedInteractableActor = true;
-				Cast<APNHUD>(GetOwner<APawn>()->GetController<APlayerController>()->GetHUD())->OnDetectedInteractableActorDelegate.Broadcast(InteractionOption);
+				Cast<APNHUD>(GetOwner<APawn>()->GetController<APlayerController>()->GetHUD())->OnDetectedInteractableActorDelegate.Broadcast(HitActor, InteractionDataTableKey);
 
 				break;
 			}

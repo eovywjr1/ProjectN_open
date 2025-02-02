@@ -28,7 +28,7 @@ void UPNStatusActorComponent::ApplyStatusFromEquipment(const FEquipmentDataTable
 		return;
 	}
 
-	const UPNGameDataSubsystem* DataSubsystem = UPNGameDataSubsystem::Get();
+	const UPNGameDataSubsystem* DataSubsystem = UPNGameDataSubsystem::Get(GetWorld());
 	UGameplayEffect* EquipmentStatusEffect = NewObject<UGameplayEffect>(this, FName(TEXT("EquipmentStatusEffect")));
 	EquipmentStatusEffect->DurationPolicy = EGameplayEffectDurationType::Infinite;
 

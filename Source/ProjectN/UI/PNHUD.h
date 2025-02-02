@@ -38,7 +38,7 @@ DECLARE_MULTICAST_DELEGATE_OneParam(GameEvent_OnInitStatusDelegate, FObjectKey);
 DECLARE_MULTICAST_DELEGATE_OneParam(GameEvent_OnSetLockOnTargetDelegate, FObjectKey);
 DECLARE_MULTICAST_DELEGATE(GameEvent_OnDeactivatedLockOnDelegate);
 
-DECLARE_MULTICAST_DELEGATE_OneParam(GameEvent_OnDetectedInteractableActorDelegate, const FInteractionOption);
+DECLARE_MULTICAST_DELEGATE_TwoParams(GameEvent_OnDetectedInteractableActorDelegate, const FObjectKey, const FName);
 DECLARE_MULTICAST_DELEGATE(GameEvent_OnUnDetectedInteractableActorDelegate);
 
 /**

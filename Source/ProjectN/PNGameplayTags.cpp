@@ -44,6 +44,8 @@ void FPNGameplayTags::AddAllTags(UGameplayTagsManager& Manager)
 	AddTag(GameplayEvent_AttackHitCheck, TEXT("GameplayEvent.AttackHitCheck"), TEXT("GameplayEvent AttackHitCheck"));
 	AddTag(GameplayEvent_EnableComboInput, TEXT("GameplayEvent.EnableComboInput"), TEXT("GameplayEvent EnableComboInput"));
 	AddTag(GameplayEvent_DisableComboInput, TEXT("GameplayEvent.DisableComboInput"), TEXT("GameplayEvent DisableComboInput"));
+	
+	AddTag(State_DisableInteraction, TEXT("State.DisableInteraction"), TEXT("State DisableInteraction"));
 }
 
 void FPNGameplayTags::AddTag(FGameplayTag& OutTag, const FName TagName, const FString TagComment)

@@ -29,10 +29,10 @@ void APNPlayerController::Tick(float DeltaTime)
 	}
 }
 
-void APNPlayerController::BeginPlay()
+void APNPlayerController::SetupInputComponent()
 {
-	Super::BeginPlay();
-
+	Super::SetupInputComponent();
+	
 	FInputModeGameOnly GameOnlyInputMode;
 	SetInputMode(GameOnlyInputMode);
 }

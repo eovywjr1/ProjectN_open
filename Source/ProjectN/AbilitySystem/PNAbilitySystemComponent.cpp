@@ -5,17 +5,17 @@
 
 void UPNAbilitySystemComponent::AbilityInputPressed(FGameplayTag InputTag)
 {
-	if (InputTag.IsValid() == false)
+	if (!InputTag.IsValid())
 	{
 		return;
 	}
 
 	for (FGameplayAbilitySpec& AbilitySpec : ActivatableAbilities.Items)
 	{
-		AbilitySpec.InputPressed = true;
-
 		if (AbilitySpec.Ability && AbilitySpec.DynamicAbilityTags.HasTagExact(InputTag))
 		{
+			AbilitySpec.InputPressed = true;
+			
 			if (AbilitySpec.IsActive())
 			{
 				AbilitySpecInputPressed(AbilitySpec);

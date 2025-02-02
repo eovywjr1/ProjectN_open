@@ -13,14 +13,13 @@ void UPNGameDataSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	LoadDataTable();
 }
 
-const UPNGameDataSubsystem* UPNGameDataSubsystem::Get()
+const UPNGameDataSubsystem* UPNGameDataSubsystem::Get(const UObject* WorldContextObject)
 {
-	const UPNGameDataSubsystem* GameDataSubSystem = GEngine->GameViewport->GetGameInstance()->GetSubsystem<UPNGameDataSubsystem>();
-	if (GameDataSubSystem == nullptr)
-	{
-		checkf(false, TEXT("호출되면 안됩니다. 클라에게 전달해주세요."));
-		return nullptr;
-	}
+	UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert);
+	check(World);
+	
+	const UPNGameDataSubsystem* GameDataSubSystem = UGameInstance::GetSubsystem<UPNGameDataSubsystem>(World->GetGameInstance());
+	check(GameDataSubSystem);
 
 	return GameDataSubSystem;
 }

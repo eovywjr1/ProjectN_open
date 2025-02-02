@@ -51,6 +51,8 @@ public:
 	FGameplayTag GameplayEvent_EnableComboInput;
 	FGameplayTag GameplayEvent_DisableComboInput;
 	
+	FGameplayTag State_DisableInteraction;
+	
 private:
 	void AddAllTags(UGameplayTagsManager& Manager);
 	void AddTag(FGameplayTag& OutTag, const FName TagName, const FString TagComment);

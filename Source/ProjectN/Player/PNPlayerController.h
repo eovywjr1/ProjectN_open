@@ -28,7 +28,7 @@ private:
 	APNPlayerController();
 
 	virtual void Tick(float DeltaSeconds) override final;
-	virtual void BeginPlay() override final;
+	virtual void SetupInputComponent() override final;
 
 	UFUNCTION()
 	void CheckLockOnTimerCallback();

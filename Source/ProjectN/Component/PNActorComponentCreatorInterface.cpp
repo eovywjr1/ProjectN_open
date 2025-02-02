@@ -14,28 +14,25 @@ void IPNActorComponentCreatorInterface::CreateActorComponent(EActorType ActorTyp
 {
 	AActor* SelfActor = Cast<AActor>(this);
 	check(SelfActor);
-	
+
 	UPNActorExtensionComponent* ActorExtensionComponent = NewObject<UPNActorExtensionComponent>(SelfActor, TEXT("ActorExtensionComponent"));
 	ActorExtensionComponent->ActorType = ActorType;
 	ActorExtensionComponent->RegisterComponent();
 
-	if (ActorType <= EActorType::NPC)
-	{
-		UPNInteractionComponent* InteractionComponent = NewObject<UPNInteractionComponent>(SelfActor, TEXT("InteractionComponent"));
-		InteractionComponent->RegisterComponent();
-	}
+	UPNInteractionComponent* InteractionComponent = NewObject<UPNInteractionComponent>(SelfActor, TEXT("InteractionComponent"));
+	InteractionComponent->RegisterComponent();
 
 	if (ActorType == EActorType::Player)
 	{
 		UPNSkillComponent* SkillComponent = NewObject<UPNSkillComponent>(SelfActor, TEXT("SkillComponent"));
 		SkillComponent->RegisterComponent();
-		
+
 		UPNEquipmentComponent* EquipmentComponent = NewObject<UPNEquipmentComponent>(SelfActor, TEXT("EquipmentComponent"));
 		EquipmentComponent->RegisterComponent();
-		
+
 		UPNDetectComponent* DetectComponent = NewObject<UPNDetectComponent>(SelfActor, TEXT("DetectComponent"));
 		DetectComponent->RegisterComponent();
-		
+
 		UPNStatusActorComponent* StatusComponent = NewObject<UPNStatusActorComponent>(SelfActor, TEXT("StatusComponent"));
 		StatusComponent->RegisterComponent();
 	}

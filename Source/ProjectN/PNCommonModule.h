@@ -39,12 +39,3 @@ public:
 	UPROPERTY(EditDefaultsOnly, meta = (EditCondition = "Shape == EHitBoxShape::Box", EditConditionHides))
 	FVector BoxExtent = FVector::ZeroVector;
 };
-
-USTRUCT()
-struct FInteractionOption
-{
-	GENERATED_BODY()
-	
-	FName InteractionDataTableKey;
-	FObjectKey InteractionTargetActorKey;
-};

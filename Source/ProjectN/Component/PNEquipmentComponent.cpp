@@ -16,13 +16,13 @@ void UPNEquipmentComponent::RequestEquip(const FName ItemKey)
 	AActor* Owner = GetOwner();
 	check(Owner);
 
-	const FItemDataTable* ItemDataTable = UPNGameDataSubsystem::Get()->GetData<FItemDataTable>(ItemKey);
+	const FItemDataTable* ItemDataTable = UPNGameDataSubsystem::Get(GetWorld())->GetData<FItemDataTable>(ItemKey);
 	if (ItemDataTable == nullptr)
 	{
 		return;
 	}
 
-	const FEquipmentDataTable* EquipmentDataTable = UPNGameDataSubsystem::Get()->GetData<FEquipmentDataTable>(ItemDataTable->GetEquipmentKey());
+	const FEquipmentDataTable* EquipmentDataTable = UPNGameDataSubsystem::Get(GetWorld())->GetData<FEquipmentDataTable>(ItemDataTable->GetEquipmentKey());
 	if (EquipmentDataTable == nullptr)
 	{
 		return;

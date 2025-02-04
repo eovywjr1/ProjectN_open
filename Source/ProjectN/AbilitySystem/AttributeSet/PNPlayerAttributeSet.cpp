@@ -5,13 +5,20 @@
 
 #include "GameplayEffectExtension.h"
 
+const float DefaultMaxSR = 6.0f;
+
 UPNPlayerAttributeSet::UPNPlayerAttributeSet()
-	: RegenerationHpRate(0.01f)
+	: RegenerationHpRate(0.01f),
+	  MaxSR(DefaultMaxSR),
+	  SR(MaxSR)
 {}
 
 void UPNPlayerAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData& Data)
 {
-	// Todo. SP와 같이 플레이어 전용 스텟 추가
-
 	Super::PostGameplayEffectExecute(Data);
+
+	if (Data.EvaluatedData.Attribute == GetSRAttribute())
+	{
+		SetSR(FMath::Clamp(GetSR(), 0.0f, GetMaxSR()));
+	}
 }

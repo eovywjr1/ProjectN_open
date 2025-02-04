@@ -22,18 +22,21 @@ void IPNActorComponentCreatorInterface::CreateActorComponent(EActorType ActorTyp
 	UPNInteractionComponent* InteractionComponent = NewObject<UPNInteractionComponent>(SelfActor, TEXT("InteractionComponent"));
 	InteractionComponent->RegisterComponent();
 
-	if (ActorType == EActorType::Player)
+	if (ActorType >= EActorType::Enemy)
 	{
 		UPNSkillComponent* SkillComponent = NewObject<UPNSkillComponent>(SelfActor, TEXT("SkillComponent"));
 		SkillComponent->RegisterComponent();
-
-		UPNEquipmentComponent* EquipmentComponent = NewObject<UPNEquipmentComponent>(SelfActor, TEXT("EquipmentComponent"));
-		EquipmentComponent->RegisterComponent();
 
 		UPNDetectComponent* DetectComponent = NewObject<UPNDetectComponent>(SelfActor, TEXT("DetectComponent"));
 		DetectComponent->RegisterComponent();
 
 		UPNStatusActorComponent* StatusComponent = NewObject<UPNStatusActorComponent>(SelfActor, TEXT("StatusComponent"));
 		StatusComponent->RegisterComponent();
+	}
+	
+	if(ActorType == EActorType::Player)
+	{
+		UPNEquipmentComponent* EquipmentComponent = NewObject<UPNEquipmentComponent>(SelfActor, TEXT("EquipmentComponent"));
+		EquipmentComponent->RegisterComponent();
 	}
 }

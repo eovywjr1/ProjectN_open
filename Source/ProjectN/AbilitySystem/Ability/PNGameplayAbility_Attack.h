@@ -52,6 +52,7 @@ private:
 	bool IsEnableExecuteAttack() const;
 	void EnableExecuteAttack() const;
 	void DisableExecuteAttack() const;
+	bool IsEnableChargeAttack() const;
 	
 	void AttackHitCheck();
 	

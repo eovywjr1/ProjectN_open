@@ -17,45 +17,48 @@ class PROJECTN_API UPNPawnAttributeSet : public UPNAttributeSet
 {
 	GENERATED_BODY()
 	
-protected:
-	UPNPawnAttributeSet();
-	
 public:
-	ATTRIBUTE_ACCESSORS(UPNPawnAttributeSet, Hp);
 	ATTRIBUTE_ACCESSORS(UPNPawnAttributeSet, MaxHp);
-	ATTRIBUTE_ACCESSORS(UPNPawnAttributeSet, Damage);
+	ATTRIBUTE_ACCESSORS(UPNPawnAttributeSet, Hp);
 	ATTRIBUTE_ACCESSORS(UPNPawnAttributeSet, Power);
-	ATTRIBUTE_ACCESSORS(UPNPawnAttributeSet, Heal);
 	ATTRIBUTE_ACCESSORS(UPNPawnAttributeSet, WalkSpeed);
 	ATTRIBUTE_ACCESSORS(UPNPawnAttributeSet, RunSpeedMultiplier);
+	ATTRIBUTE_ACCESSORS(UPNPawnAttributeSet, AttackDamage);
+	ATTRIBUTE_ACCESSORS(UPNPawnAttributeSet, Damage);
+	ATTRIBUTE_ACCESSORS(UPNPawnAttributeSet, Heal);
 	
 	mutable FOutOfHpDelegate OnOutOfHp;
 	mutable FOnDamagedDelegate OnDamagedDelegate;
 	
 protected:
+	UPNPawnAttributeSet();
+
 	virtual void PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData &Data) override;
 	
 private:
 	UPROPERTY()
-	FGameplayAttributeData Hp;
-
-	UPROPERTY()
 	FGameplayAttributeData MaxHp;
-
+	
 	UPROPERTY()
-	FGameplayAttributeData Damage;
+	FGameplayAttributeData Hp;
 	
 	UPROPERTY()
 	FGameplayAttributeData Power;
-
-	UPROPERTY()
-	FGameplayAttributeData Heal;
 	
 	UPROPERTY()
 	FGameplayAttributeData WalkSpeed;
 	
 	UPROPERTY()
 	FGameplayAttributeData RunSpeedMultiplier;
+	
+	UPROPERTY()
+	FGameplayAttributeData AttackDamage;
+	
+	UPROPERTY()
+	FGameplayAttributeData Damage;
+	
+	UPROPERTY()
+	FGameplayAttributeData Heal;
 	
 	bool bOutOfHp = false;
 };

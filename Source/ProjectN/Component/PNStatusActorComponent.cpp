@@ -124,7 +124,7 @@ UPNStatusActorComponent::UPNStatusActorComponent()
 void UPNStatusActorComponent::InitializeComponent()
 {
 	Super::InitializeComponent();
-	
+
 	if (IPNAbilitySystemInterface* AbilitySystemInterface = GetOwner<IPNAbilitySystemInterface>())
 	{
 		AbilitySystemInterface->OnInitializeAbilitySystemDelegate.AddUObject(this, &ThisClass::OnInitializeAbilitySystem);
@@ -133,38 +133,46 @@ void UPNStatusActorComponent::InitializeComponent()
 
 void UPNStatusActorComponent::OnInitializeAbilitySystem()
 {
-	UAbilitySystemComponent* AbilitySystemComponent = GetOwner<IPNAbilitySystemInterface>()->GetAbilitySystemComponent();
-	check(AbilitySystemComponent);
-
 	AActor* Owner = GetOwner();
 	APNCharacter* OwnerCast = Cast<APNCharacter>(Owner);
-	// Todo. 데이터테이블과 연동해야 함	
-	if (OwnerCast && OwnerCast->GetController() && OwnerCast->GetController()->IsPlayerController())
+
+	if (Owner->HasAuthority())
 	{
-		AbilitySystemComponent->InitStats(UPNPlayerAttributeSet::StaticClass(), nullptr);
+		UAbilitySystemComponent* AbilitySystemComponent = GetOwner<IPNAbilitySystemInterface>()->GetAbilitySystemComponent();
+		check(AbilitySystemComponent);
+
+		// Todo. 데이터테이블과 연동해야 함	
+		if (OwnerCast && OwnerCast->GetController() && OwnerCast->GetController()->IsPlayerController())
+		{
+			AbilitySystemComponent->InitStats(UPNPlayerAttributeSet::StaticClass(), nullptr);
+		}
+		else
+		{
+			AbilitySystemComponent->InitStats(UPNPawnAttributeSet::StaticClass(), nullptr);
+		}
+
+
+		const UPNPawnAttributeSet* PawnAttributeSet = AbilitySystemComponent->GetSet<UPNPawnAttributeSet>();
+		PawnAttributeSet->OnOutOfHp.AddUObject(this, &ThisClass::OnOutOfHp);
+		PawnAttributeSet->OnDamagedDelegate.AddUObject(this, &ThisClass::OnDamaged);
+
+		AbilitySystemComponent->AddLooseGameplayTag(FPNGameplayTags::Get().Status_Peace);
+		FGameplayEventData PayLoad;
+		AbilitySystemComponent->HandleGameplayEvent(FPNGameplayTags::Get().Status_Peace, &PayLoad);
+
+		// Todo. 추후 Pawn을 구현한다면 OnInitializedStatus를 Interface로 선언해야 함
+		if (OwnerCast)
+		{
+			OwnerCast->OnInitializedStatus();
+		}
+
+		AbilitySystemComponent->RegisterGameplayTagEvent(FPNGameplayTags::Get().Action_Attack, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &ThisClass::OnActionTagChanged);
+		AbilitySystemComponent->RegisterGameplayTagEvent(FPNGameplayTags::Get().Action_Guard, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &ThisClass::OnActionTagChanged);
 	}
-	else
+
+	if (OwnerCast->GetController() && OwnerCast->GetController()->IsLocalController())
 	{
-		AbilitySystemComponent->InitStats(UPNPawnAttributeSet::StaticClass(), nullptr);
-	}
-
-	const UPNPawnAttributeSet* PawnAttributeSet = AbilitySystemComponent->GetSet<UPNPawnAttributeSet>();
-	PawnAttributeSet->OnOutOfHp.AddUObject(this, &ThisClass::OnOutOfHp);
-	PawnAttributeSet->OnDamagedDelegate.AddUObject(this, &ThisClass::OnDamaged);
-
-	AbilitySystemComponent->AddLooseGameplayTag(FPNGameplayTags::Get().Status_Peace);
-	FGameplayEventData PayLoad;
-	AbilitySystemComponent->HandleGameplayEvent(FPNGameplayTags::Get().Status_Peace, &PayLoad);
-
-	Owner->FindComponentByClass<UPNDetectComponent>()->OnDetectedDelegate.AddUObject(this, &ThisClass::OnDetected);
-
-	AbilitySystemComponent->RegisterGameplayTagEvent(FPNGameplayTags::Get().Action_Attack, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &ThisClass::OnActionTagChanged);
-	AbilitySystemComponent->RegisterGameplayTagEvent(FPNGameplayTags::Get().Action_Guard, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &ThisClass::OnActionTagChanged);
-
-	// Todo. 추후 OnInitializedStatus를 Interface로 선언해야 할수도?
-	if (OwnerCast)
-	{
-		OwnerCast->OnInitializedStatus();
+		Owner->FindComponentByClass<UPNDetectComponent>()->OnDetectedDelegate.AddUObject(this, &ThisClass::OnDetected);
 	}
 }
 

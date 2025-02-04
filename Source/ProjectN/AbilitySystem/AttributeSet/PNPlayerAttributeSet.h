@@ -16,6 +16,8 @@ class PROJECTN_API UPNPlayerAttributeSet : public UPNPawnAttributeSet
 	
 public:
 	ATTRIBUTE_ACCESSORS(UPNPlayerAttributeSet, RegenerationHpRate);
+	ATTRIBUTE_ACCESSORS(UPNPlayerAttributeSet, MaxSR);
+	ATTRIBUTE_ACCESSORS(UPNPlayerAttributeSet, SR);
 	
 private:
 	UPNPlayerAttributeSet();
@@ -25,4 +27,10 @@ private:
 private:
 	UPROPERTY()
 	FGameplayAttributeData RegenerationHpRate;
+	
+	UPROPERTY()
+	FGameplayAttributeData MaxSR;
+	
+	UPROPERTY()
+	FGameplayAttributeData SR;
 };

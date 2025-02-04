@@ -12,15 +12,14 @@ constexpr const uint16 DefaultWalkSpeed = static_cast<uint16>(EPNDistanceUnit::D
 
 UPNPawnAttributeSet::UPNPawnAttributeSet()
 	: MaxHp(1000.0f),
-	  Damage(0.0f),
+	  Hp(GetMaxHp()),
 	  Power(0.0f),
-	  Heal(0.0f),
 	  WalkSpeed(DefaultWalkSpeed),
-	  RunSpeedMultiplier(2.0f)
-
-{
-	InitHp(GetMaxHp());
-}
+	  RunSpeedMultiplier(2.0f),
+	  AttackDamage(0.0f),
+	  Damage(0.0f),
+	  Heal(0.0f)
+{}
 
 void UPNPawnAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData& Data)
 {

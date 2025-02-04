@@ -21,6 +21,9 @@ public:
 	TObjectPtr<UAnimMontage> AttackActionMontage = nullptr;
 	
 	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UGameplayEffect> GameplayEffect = nullptr;
+	
+	UPROPERTY(EditDefaultsOnly)
 	FName AttackActionMontageSectionName = NAME_None;
 };
 

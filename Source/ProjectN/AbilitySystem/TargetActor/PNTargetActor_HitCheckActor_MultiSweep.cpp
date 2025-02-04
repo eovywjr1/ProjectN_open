@@ -47,7 +47,7 @@ void APNTargetActor_HitCheckActor_MultiSweep::GetHitBoxActors(TArray<TWeakObject
 	DrawDebugBox(GetWorld(), Start, AttackHitBoxData.BoxExtent, SourceActor->GetActorRotation().Quaternion(), FColor::Green, false, 5.0f);
 #endif
 
-	HitResults.RemoveAll([this, Start, CollisionShape](const FHitResult& Hit)
+	HitResults.RemoveAll([this](const FHitResult& Hit)
 	{
 		return Cast<APawn>(Hit.GetActor()) == nullptr;
 	});

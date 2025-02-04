@@ -10,6 +10,7 @@ UENUM()
 enum class EActorType : uint8
 {
 	NPC,
+	Enemy,
 	Player,
 	MAX
 };

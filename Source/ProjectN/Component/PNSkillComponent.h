@@ -32,6 +32,7 @@ public:
 	void InitComboTree();
 	FORCEINLINE void ClearCombo();
 	const FAttackData* ExecuteNextCombo(const FGameplayTag NextAttackTag);
+	bool IsEnableNextCombo(const FGameplayTag NextAttackTag) const;
 	FORCEINLINE bool IsCurrentCombo(const FGameplayTag AttackTag);
 	
 private:

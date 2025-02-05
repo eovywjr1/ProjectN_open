@@ -18,15 +18,37 @@ const FAttackData* UPNSkillComponent::ExecuteNextCombo(const FGameplayTag NextAt
 {
 	check(CurrentComboNode.IsValid());
 
-	TWeakPtr<FComboNode>* NextComboNode = CurrentComboNode.Pin()->Children.Find(NextAttackTag);
-	if (NextComboNode == nullptr || !NextComboNode->IsValid())
+	if (!IsEnableNextCombo(NextAttackTag))
 	{
 		return nullptr;
 	}
 
+	TWeakPtr<FComboNode>* NextComboNode = CurrentComboNode.Pin()->Children.Find(NextAttackTag);
 	CurrentComboNode = *NextComboNode;
 
 	return CurrentComboNode.Pin()->ComboData;
+}
+
+bool UPNSkillComponent::IsEnableNextCombo(const FGameplayTag NextAttackTag) const
+{
+	TWeakPtr<FComboNode>* NextComboNode = CurrentComboNode.Pin()->Children.Find(NextAttackTag);
+	if (NextComboNode == nullptr || !NextComboNode->IsValid())
+	{
+		return false;
+	}
+
+	const FAttackData* NextComboData = NextComboNode->Pin()->ComboData;
+	if (NextComboData->GameplayEffect)
+	{
+		const UGameplayEffect* AttackGameplayEffect = NextComboData->GameplayEffect->GetDefaultObject<UGameplayEffect>();
+		UAbilitySystemComponent* AbilitySystemComponent = Cast<IAbilitySystemInterface>(GetOwner())->GetAbilitySystemComponent();
+		if (!AbilitySystemComponent->CanApplyAttributeModifiers(AttackGameplayEffect, 1, AbilitySystemComponent->MakeEffectContext()))
+		{
+			return false;
+		}
+	}
+
+	return true;
 }
 
 bool UPNSkillComponent::IsCurrentCombo(const FGameplayTag AttackTag)
@@ -44,7 +66,7 @@ bool UPNSkillComponent::IsCurrentCombo(const FGameplayTag AttackTag)
 UPNSkillComponent::UPNSkillComponent()
 {
 	bWantsInitializeComponent = true;
-	
+
 	RootComboNode = CreateNode(nullptr);
 	CurrentComboNode = RootComboNode;
 }

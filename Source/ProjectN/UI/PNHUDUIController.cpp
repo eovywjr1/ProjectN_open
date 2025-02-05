@@ -29,7 +29,10 @@ void UPNHUDUIController::NativeConstruct()
 	// Todo. 임시 추후 월드 진입할 때로 변경
 	SetVisibility(ESlateVisibility::Visible);
 	
-	PlayerHpWidget->SetTargetObject(GetOwningPlayerPawn());
+	APawn* PlayerPawn = GetOwningPlayerPawn();
+	
+	PlayerHpWidget->SetTargetObject(PlayerPawn);
+	PlayerSRWidget->SetTargetObject(PlayerPawn);
 }
 
 void UPNHUDUIController::SetLockOnTarget(FObjectKey LockOnTargetObjectKey)

@@ -10,7 +10,8 @@ enum class EStatusType : uint8
 	Invalid,
 	Power,
 	Hp,
-	MaxHp
+	MaxHp,
+	SR
 };
 
 USTRUCT()

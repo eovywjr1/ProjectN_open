@@ -34,4 +34,7 @@ private:
 	
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UPNPlayerStatusUserWidget> PlayerHpWidget;
+	
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UPNPlayerStatusUserWidget> PlayerSRWidget;
 };

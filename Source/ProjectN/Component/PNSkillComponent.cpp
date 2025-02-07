@@ -17,6 +17,7 @@ void UPNSkillComponent::ClearCombo()
 const FAttackData* UPNSkillComponent::ExecuteNextCombo(const FGameplayTag NextAttackTag)
 {
 	check(CurrentComboNode.IsValid());
+	check(HasAuthority());
 
 	if (!IsEnableNextCombo(NextAttackTag))
 	{
@@ -63,7 +64,8 @@ bool UPNSkillComponent::IsCurrentCombo(const FGameplayTag AttackTag)
 	return CurrentComboData && CurrentComboData->AttackTag.MatchesTagExact(AttackTag);
 }
 
-UPNSkillComponent::UPNSkillComponent()
+UPNSkillComponent::UPNSkillComponent(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
 {
 	bWantsInitializeComponent = true;
 

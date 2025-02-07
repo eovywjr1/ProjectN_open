@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 #include "AbilitySystem/AttributeSet/PNWeaponAttributeSet.h"
+#include "Components/PawnComponent.h"
 #include "PNSkillComponent.generated.h"
 
 struct FAttackData;
@@ -24,7 +25,7 @@ public:
  * 
  */
 UCLASS()
-class PROJECTN_API UPNSkillComponent : public UActorComponent
+class PROJECTN_API UPNSkillComponent : public UPawnComponent
 {
 	GENERATED_BODY()
 
@@ -36,7 +37,7 @@ public:
 	FORCEINLINE bool IsCurrentCombo(const FGameplayTag AttackTag);
 	
 private:
-	UPNSkillComponent();
+	UPNSkillComponent(const FObjectInitializer& ObjectInitializer);
 
 	TWeakPtr<FComboNode> CreateNode(const FAttackData* InComboData);
 

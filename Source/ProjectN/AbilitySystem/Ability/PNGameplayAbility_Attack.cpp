@@ -4,6 +4,7 @@
 #include "AbilitySystem/Ability/PNGameplayAbility_Attack.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "PNGameplayTags.h"
+#include "PNLogChannels.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitDelay.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
@@ -142,6 +143,12 @@ void UPNGameplayAbility_Attack::ExecuteAttack()
 	{
 		return;
 	}
+	
+	if (AttackData->GameplayEffect)
+	{
+		const UGameplayEffect* AttackGameplayEffect = AttackData->GameplayEffect->GetDefaultObject<UGameplayEffect>();
+		ApplyGameplayEffectToOwner(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, AttackGameplayEffect, GetAbilityLevel(CurrentSpecHandle, CurrentActorInfo));
+	}
 
 	UAbilitySystemComponent* AbilitySystemComponent = GetAbilitySystemComponentFromActorInfo();
 	AbilitySystemComponent->SetLooseGameplayTagCount(AttackTag, 1);
@@ -190,7 +197,10 @@ void UPNGameplayAbility_Attack::AttackHitCheck()
 	const UPNWeaponAttributeSet* WeaponAttributeSet = GetAbilitySystemComponentFromActorInfo()->GetSet<UPNWeaponAttributeSet>();
 	check(WeaponAttributeSet);
 	FHitBoxData AttackHitBoxData;
-	WeaponAttributeSet->GetAttackHitBoxData(AttackTag, AttackHitBoxData);
+	if (!WeaponAttributeSet->GetAttackHitBoxData(AttackTag, AttackHitBoxData))
+	{
+		UE_LOG(LogPN, Warning, TEXT("무기 AttributeSet에 %s 태그의 공격 어빌리티의 판정 범위 데이터가 없습니다."), *AttackTag.ToString());
+	}
 
 	if (TargetActorHitCheckClass)
 	{
@@ -202,12 +212,6 @@ void UPNGameplayAbility_Attack::AttackHitCheck()
 
 void UPNGameplayAbility_Attack::OnAttackHitTraceResultCallback(const FGameplayAbilityTargetDataHandle& TargetDataHandle)
 {
-	if (AttackData->GameplayEffect)
-	{
-		const UGameplayEffect* AttackGameplayEffect = AttackData->GameplayEffect->GetDefaultObject<UGameplayEffect>();
-		ApplyGameplayEffectToOwner(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, AttackGameplayEffect, GetAbilityLevel(CurrentSpecHandle, CurrentActorInfo));
-	}
-
 	if (UAbilitySystemBlueprintLibrary::TargetDataHasActor(TargetDataHandle, 0))
 	{
 		UGameplayEffect* DamageEffect = NewObject<UGameplayEffect>(this, FName(TEXT("DamageEffect")));

@@ -6,6 +6,7 @@
 #include "GameplayEffectExtension.h"
 #include "PNCommonModule.h"
 #include "PNGameplayTags.h"
+#include "Net/UnrealNetwork.h"
 
 constexpr const uint8 DefaultWalkSpeedDurationPerDefaultMeasurementUnit = 16;
 constexpr const uint16 DefaultWalkSpeed = static_cast<uint16>(EPNDistanceUnit::DefaultMeasurementUnit) / DefaultWalkSpeedDurationPerDefaultMeasurementUnit;
@@ -52,4 +53,15 @@ void UPNPawnAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffect
 		Data.Target.AddLooseGameplayTag(FPNGameplayTags::Get().Status_Dead);
 		OnOutOfHp.Broadcast();
 	}
+}
+
+void UPNPawnAttributeSet::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	
+	DOREPLIFETIME(ThisClass, MaxHp);
+	DOREPLIFETIME(ThisClass, Hp);
+	DOREPLIFETIME(ThisClass, Power);
+	DOREPLIFETIME(ThisClass, WalkSpeed);
+	DOREPLIFETIME(ThisClass, RunSpeedMultiplier);
 }

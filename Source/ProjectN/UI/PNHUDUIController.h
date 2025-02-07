@@ -6,7 +6,7 @@
 #include "APNUIController.h"
 #include "PNHUDUIController.generated.h"
 
-class UPNPlayerStatusUserWidget;
+class UPNStatusUserWidget;
 class UPNInteractionUserWidget;
 class UPNTargetMarkerUserWidget;
 
@@ -33,8 +33,8 @@ private:
 	TObjectPtr<UPNInteractionUserWidget> InteractionWidget;
 	
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UPNPlayerStatusUserWidget> PlayerHpWidget;
+	TObjectPtr<UPNStatusUserWidget> PlayerHpWidget;
 	
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UPNPlayerStatusUserWidget> PlayerSRWidget;
+	TObjectPtr<UPNStatusUserWidget> PlayerSRWidget;
 };

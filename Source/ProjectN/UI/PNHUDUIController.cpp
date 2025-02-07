@@ -5,7 +5,7 @@
 
 #include "PNHUD.h"
 #include "PNInteractionUserWidget.h"
-#include "PNPlayerStatusUserWidget.h"
+#include "PNStatusUserWidget.h"
 #include "PNTargetMarkerUserWidget.h"
 
 void UPNHUDUIController::NativeOnInitialized()

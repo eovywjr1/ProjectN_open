@@ -23,14 +23,15 @@ private:
 	UPNPlayerAttributeSet();
 
 	virtual void PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData &Data) override final;
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override final;
 	
 private:
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	FGameplayAttributeData RegenerationHpRate;
 	
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	FGameplayAttributeData MaxSR;
 	
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	FGameplayAttributeData SR;
 };

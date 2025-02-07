@@ -34,21 +34,22 @@ protected:
 	UPNPawnAttributeSet();
 
 	virtual void PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData &Data) override;
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 	
 private:
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	FGameplayAttributeData MaxHp;
 	
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	FGameplayAttributeData Hp;
 	
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	FGameplayAttributeData Power;
 	
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	FGameplayAttributeData WalkSpeed;
 	
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	FGameplayAttributeData RunSpeedMultiplier;
 	
 	UPROPERTY()

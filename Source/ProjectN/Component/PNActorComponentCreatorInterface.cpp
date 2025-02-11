@@ -7,6 +7,8 @@
 #include "PNDetectComponent.h"
 #include "PNEquipmentComponent.h"
 #include "PNInteractionComponent.h"
+#include "PNInventoryComponent.h"
+#include "PNPlayerInputComponent.h"
 #include "PNSkillComponent.h"
 #include "PNStatusActorComponent.h"
 
@@ -33,10 +35,16 @@ void IPNActorComponentCreatorInterface::CreateActorComponent(EActorType ActorTyp
 		UPNStatusActorComponent* StatusComponent = NewObject<UPNStatusActorComponent>(SelfActor, TEXT("StatusComponent"));
 		StatusComponent->RegisterComponent();
 	}
-	
-	if(ActorType == EActorType::Player)
+
+	if (ActorType == EActorType::Player)
 	{
 		UPNEquipmentComponent* EquipmentComponent = NewObject<UPNEquipmentComponent>(SelfActor, TEXT("EquipmentComponent"));
 		EquipmentComponent->RegisterComponent();
+
+		UPNPlayerInputComponent* PNPlayerInputComponent = NewObject<UPNPlayerInputComponent>(SelfActor, TEXT("PlayerInputComponent"));
+		PNPlayerInputComponent->RegisterComponent();
+
+		UPNInventoryComponent* InventoryComponent = NewObject<UPNInventoryComponent>(SelfActor, TEXT("InventoryComponent"));
+		InventoryComponent->RegisterComponent();
 	}
 }

@@ -7,8 +7,6 @@
 #include "Component/PNActorComponentCreatorInterface.h"
 #include "PNCharacterPlayer.generated.h"
 
-class UPNPlayerInputComponent;
-
 /**
  * 
  */
@@ -35,8 +33,5 @@ private:
 	void InitialComponents();
 	
 private:
-	UPROPERTY(EditDefaultsOnly)
-	TObjectPtr<UPNPlayerInputComponent> PNPlayerInputComponent;
-	
 	float RunTargetRotationYaw = 0.0f;
 };

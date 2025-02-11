@@ -20,7 +20,6 @@ void UPNPlayerAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffe
 
 	if (Data.EvaluatedData.Attribute == GetSRAttribute())
 	{
-		UE_LOG(LogTemp, Log, TEXT("SR Override"));
 		SetSR(FMath::Clamp(GetSR(), 0.0f, GetMaxSR()));
 	}
 }

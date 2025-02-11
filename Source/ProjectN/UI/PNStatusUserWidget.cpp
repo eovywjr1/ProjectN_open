@@ -78,13 +78,10 @@ void UPNStatusUserWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaT
 		}
 	case EStatusType::SR:
 		{
-			const UPNPlayerAttributeSet* PlayerAttributeSet = AbilitySystemComponent->GetSet<UPNPlayerAttributeSet>();
-			if (PlayerAttributeSet == nullptr)
+			if (const UPNPlayerAttributeSet* PlayerAttributeSet = AbilitySystemComponent->GetSet<UPNPlayerAttributeSet>())
 			{
-				return;
+				ProgressBar->SetPercent(PlayerAttributeSet->GetSR() / PlayerAttributeSet->GetMaxSR());
 			}
-
-			ProgressBar->SetPercent(PlayerAttributeSet->GetSR() / PlayerAttributeSet->GetMaxSR());
 
 			break;
 		}

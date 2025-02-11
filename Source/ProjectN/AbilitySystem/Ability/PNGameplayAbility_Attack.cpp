@@ -8,12 +8,11 @@
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitDelay.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
-#include "AbilitySystem/PNAbilitySystemComponent.h"
 #include "AbilitySystem/AttributeSet/PNWeaponAttributeSet.h"
-#include "AbilitySystem/Execution/PNDamageExecution.h"
 #include "AbilitySystem/TargetActor/PNTargetActor_HitCheckActor.h"
 #include "AbilitySystem/Task/PNAbilityTask_TraceToPawn.h"
 #include "Component/PNSkillComponent.h"
+#include "Component/PNStatusActorComponent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -22,7 +21,7 @@ UPNGameplayAbility_Attack::UPNGameplayAbility_Attack()
 	  ChargeAttackAbilityTag(FGameplayTag())
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
-	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::ServerOnly;
+	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::LocalOnly;
 
 	ActivationBlockedTags.AddTag(FPNGameplayTags::Get().Ability_Attack);
 }
@@ -132,22 +131,20 @@ void UPNGameplayAbility_Attack::ExecuteAttack()
 		return;
 	}
 
+	// Charge가 불가능할 경우 기본 공격이 수행
 	FGameplayTag AttackTag = BaseAttackAbilityTag;
 	if (IsEnableChargeAttack())
 	{
 		AttackTag = ChargeAttackAbilityTag;
 	}
 
-	AttackData = GetAvatarActorFromActorInfo()->FindComponentByClass<UPNSkillComponent>()->ExecuteNextCombo(AttackTag);
-	if (AttackData == nullptr)
+	if (UPNSkillComponent* SkillComponent = GetAvatarActorFromActorInfo()->FindComponentByClass<UPNSkillComponent>())
 	{
-		return;
-	}
-	
-	if (AttackData->GameplayEffect)
-	{
-		const UGameplayEffect* AttackGameplayEffect = AttackData->GameplayEffect->GetDefaultObject<UGameplayEffect>();
-		ApplyGameplayEffectToOwner(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, AttackGameplayEffect, GetAbilityLevel(CurrentSpecHandle, CurrentActorInfo));
+		AttackData = SkillComponent->ExecuteNextCombo(AttackTag);
+		if (AttackData == nullptr)
+		{
+			return;
+		}
 	}
 
 	UAbilitySystemComponent* AbilitySystemComponent = GetAbilitySystemComponentFromActorInfo();
@@ -212,23 +209,27 @@ void UPNGameplayAbility_Attack::AttackHitCheck()
 
 void UPNGameplayAbility_Attack::OnAttackHitTraceResultCallback(const FGameplayAbilityTargetDataHandle& TargetDataHandle)
 {
-	if (UAbilitySystemBlueprintLibrary::TargetDataHasActor(TargetDataHandle, 0))
+	APawn* AvatarActor = Cast<APawn>(GetAvatarActorFromActorInfo());
+	UPNStatusActorComponent* AvatarStatusActorComponent = AvatarActor->FindComponentByClass<UPNStatusActorComponent>();
+	TArray<AActor*> TargetActors = UAbilitySystemBlueprintLibrary::GetAllActorsFromTargetData(TargetDataHandle);
+	for (AActor* TargetActor : TargetActors)
 	{
-		UGameplayEffect* DamageEffect = NewObject<UGameplayEffect>(this, FName(TEXT("DamageEffect")));
-		DamageEffect->DurationPolicy = EGameplayEffectDurationType::Instant;
-
-		FGameplayEffectExecutionDefinition ExecutionDefinition;
-		ExecutionDefinition.CalculationClass = UPNDamageExecution::StaticClass();
-		DamageEffect->Executions.Add(ExecutionDefinition);
-
-		UPNAbilitySystemComponent* AbilitySystemComponent = Cast<UPNAbilitySystemComponent>(GetAbilitySystemComponentFromActorInfo());
-		FGameplayEffectContextHandle EffectContextHandle = AbilitySystemComponent->MakeEffectContext();
-		EffectContextHandle.AddSourceObject(GetAvatarActorFromActorInfo());
-
-		FGameplayEffectSpecHandle EffectSpecHandle = AbilitySystemComponent->MakeOutgoingSpecByGameplayEffect(DamageEffect, 0, EffectContextHandle);
-		if (EffectSpecHandle.IsValid())
+		APawn* TargetActorCast = Cast<APawn>(TargetActor);
+		if (TargetActorCast == nullptr)
 		{
-			ApplyGameplayEffectSpecToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, EffectSpecHandle, TargetDataHandle);
+			continue;
+		}
+
+		check(AvatarActor->IsPlayerControlled() || TargetActorCast->IsPlayerControlled());
+
+		if (AvatarActor->IsPlayerControlled())
+		{
+			AvatarStatusActorComponent->ServerRequestAttackDamage(AvatarActor, TargetActorCast);
+		}
+		else if (TargetActorCast->IsPlayerControlled())
+		{
+			UPNStatusActorComponent* TargetStatusActorComponent = TargetActorCast->FindComponentByClass<UPNStatusActorComponent>();
+			TargetStatusActorComponent->ServerRequestAttackDamage(AvatarActor, TargetActorCast);
 		}
 	}
 }

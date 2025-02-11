@@ -64,7 +64,7 @@ FGameplayEffectSpecHandle UPNAbilitySystemComponent::MakeOutgoingSpecByGameplayE
 
 FActiveGameplayEffectHandle UPNAbilitySystemComponent::ApplyGameplayEffectToSelf(UGameplayEffect* GameplayEffect)
 {
-	if (IsValid(GameplayEffect) == false)
+	if (!IsValid(GameplayEffect))
 	{
 		return FActiveGameplayEffectHandle();
 	}
@@ -72,6 +72,6 @@ FActiveGameplayEffectHandle UPNAbilitySystemComponent::ApplyGameplayEffectToSelf
 	FGameplayEffectContextHandle EffectContextHandle = MakeEffectContext();
 	EffectContextHandle.AddSourceObject(GetOwner());
 
-	FGameplayEffectSpecHandle EffectSpecHandle = MakeOutgoingSpecByGameplayEffect(GameplayEffect, 0, EffectContextHandle);
+	FGameplayEffectSpecHandle EffectSpecHandle = MakeOutgoingSpecByGameplayEffect(GameplayEffect, 1, EffectContextHandle);
 	return ApplyGameplayEffectSpecToSelf(*EffectSpecHandle.Data.Get());
 }

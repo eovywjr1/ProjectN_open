@@ -7,6 +7,7 @@
 #include "PNGameplayTags.h"
 #include "AbilitySystem/PNAbilitySystemComponent.h"
 #include "AbilitySystem/AttributeSet/PNPlayerAttributeSet.h"
+#include "AbilitySystem/Execution/PNDamageExecution.h"
 #include "Actor/PNCharacter.h"
 #include "DataTable/EquipmentDataTable.h"
 #include "DataTable/StatusDataTable.h"
@@ -116,9 +117,55 @@ bool UPNStatusActorComponent::IsDead() const
 	return false;
 }
 
+void UPNStatusActorComponent::ServerRequestAttackDamage_Implementation(const AActor* SourceActor, const AActor* TargetActor)
+{
+	check(GetOwner()->HasAuthority());
+
+	if (SourceActor == nullptr || TargetActor == nullptr)
+	{
+		return;
+	}
+
+	// 초기 단계에서 러프하게 거리 검증
+	// 추후 무기/공격/스킬 기획에 따라 거리 검증이 변경될 수 있음
+	const float DefaultCheckAttackDistance = static_cast<float>(EPNDistanceUnit::DefaultMeasurementUnit);
+	if (SourceActor->GetDistanceTo(TargetActor) > DefaultCheckAttackDistance)
+	{
+		return;
+	}
+
+	TargetActor->FindComponentByClass<UPNStatusActorComponent>()->ApplyAttackDamage(SourceActor);
+}
+
+void UPNStatusActorComponent::ApplyAttackDamage(const AActor* SourceActor)
+{
+	check(GetOwner()->HasAuthority());
+
+	UGameplayEffect* DamageEffect = NewObject<UGameplayEffect>(this, FName(TEXT("DamageEffect")));
+	DamageEffect->DurationPolicy = EGameplayEffectDurationType::Instant;
+
+	FGameplayEffectExecutionDefinition ExecutionDefinition;
+	ExecutionDefinition.CalculationClass = UPNDamageExecution::StaticClass();
+	DamageEffect->Executions.Add(ExecutionDefinition);
+
+	IPNAbilitySystemInterface* AbilitySystemInterface = Cast<IPNAbilitySystemInterface>(GetOwner());
+	check(AbilitySystemInterface);
+
+	UPNAbilitySystemComponent* AbilitySystemComponent = AbilitySystemInterface->GetPNAbilitySystemComponent();
+	FGameplayEffectContextHandle EffectContextHandle = AbilitySystemComponent->MakeEffectContext();
+	EffectContextHandle.AddSourceObject(SourceActor);
+
+	FGameplayEffectSpecHandle EffectSpecHandle = AbilitySystemComponent->MakeOutgoingSpecByGameplayEffect(DamageEffect, 1, EffectContextHandle);
+	if (EffectSpecHandle.IsValid())
+	{
+		AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*EffectSpecHandle.Data.Get());
+	}
+}
+
 UPNStatusActorComponent::UPNStatusActorComponent()
 {
 	bWantsInitializeComponent = true;
+	SetIsReplicatedByDefault(true);
 }
 
 void UPNStatusActorComponent::InitializeComponent()

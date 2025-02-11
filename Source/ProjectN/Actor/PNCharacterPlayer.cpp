@@ -6,7 +6,6 @@
 #include "AbilitySystem/PNAbilitySystemComponent.h"
 #include "Component/PNEnhancedInputComponent.h"
 #include "Component/PNPlayerInputComponent.h"
-#include "Component/PNInventoryComponent.h"
 #include "Component/PNActorExtensionComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Player/PNPlayerState.h"
@@ -67,10 +66,7 @@ void APNCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	if (PNPlayerInputComponent)
-	{
-		PNPlayerInputComponent->InitializePlayerInput(InputComponent);
-	}
+	FindComponentByClass<UPNPlayerInputComponent>()->InitializePlayerInput(InputComponent);
 }
 
 void APNCharacterPlayer::InitialComponents()
@@ -83,15 +79,9 @@ void APNCharacterPlayer::InitialComponents()
 
 	if (IsLocallyControlled())
 	{
-		PNPlayerInputComponent = NewObject<UPNPlayerInputComponent>(this, TEXT("PlayerInputComponent"));
-		PNPlayerInputComponent->RegisterComponent();
-
 		// PlayerState 리플리케이션이 늦을 경우 InputComponent가 먼저 생생하는 상황 대비하여 초기화
 		// 보통은 PlayerInputComponent가 먼저 생성되므로 InputComponent가 nullptr
-		PNPlayerInputComponent->InitializePlayerInput(InputComponent);
-
-		UPNInventoryComponent* InventoryComponent = NewObject<UPNInventoryComponent>(this, TEXT("InventoryComponent"));
-		InventoryComponent->RegisterComponent();
+		FindComponentByClass<UPNPlayerInputComponent>()->InitializePlayerInput(InputComponent);
 	}
 }
 

@@ -4,10 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystemInterface.h"
+#include "AbilitySystem/PNAbilitySystemComponent.h"
 #include "UObject/Interface.h"
 #include "PNAbilitySystemInterface.generated.h"
-
-class UPNAbilitySystemComponent;
 
 DECLARE_MULTICAST_DELEGATE(FOnInitializeAbilitySystemDelegate)
 
@@ -26,5 +25,13 @@ class PROJECTN_API IPNAbilitySystemInterface : public IAbilitySystemInterface
 	GENERATED_BODY()
 
 public:
+	UPNAbilitySystemComponent* GetPNAbilitySystemComponent() const
+	{
+		UPNAbilitySystemComponent* AbilitySystemComponent = Cast<UPNAbilitySystemComponent>(GetAbilitySystemComponent());
+		check(AbilitySystemComponent);
+
+		return AbilitySystemComponent;
+	}
+
 	FOnInitializeAbilitySystemDelegate OnInitializeAbilitySystemDelegate;
 };

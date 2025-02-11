@@ -28,7 +28,10 @@ public:
 	void RequestHeal(const float HealAmount);
 	
 	bool IsDead() const;
-
+	
+	UFUNCTION(Server, Reliable)
+	void ServerRequestAttackDamage(const AActor* SourceActor, const AActor* TargetActor);
+	
 private:
 	UPNStatusActorComponent();
 	virtual void InitializeComponent() override final;
@@ -40,6 +43,7 @@ private:
 	
 	void OnOutOfHp() const;
 	void OnDamaged();
+	void ApplyAttackDamage(const AActor* SourceActor);
 	
 	void SetPeaceOrFightStatus(const FGameplayTag StatusTag);
 	

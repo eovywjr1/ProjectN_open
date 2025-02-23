@@ -7,6 +7,7 @@
 #include "PNInteractionComponent.h"
 #include "PNPercent.h"
 #include "PNStatusActorComponent.h"
+#include "AI/PNAIController.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "UI/PNHUD.h"
@@ -44,8 +45,9 @@ void UPNDetectComponent::SetDetectTypeAndUpdateDetect(const EDetectType InDetect
 	UpdateDetectedEnemy();
 }
 
-UPNDetectComponent::UPNDetectComponent()
-	: CheckDetectEnemyDistance(DefaultCheckDetectEnemyDistance)
+UPNDetectComponent::UPNDetectComponent(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer),
+	  CheckDetectEnemyDistance(DefaultCheckDetectEnemyDistance)
 {
 	PrimaryComponentTick.bCanEverTick = true;
 }
@@ -57,10 +59,11 @@ void UPNDetectComponent::TickComponent(float DeltaTime, enum ELevelTick TickType
 	APawn* Owner = GetOwner<APawn>();
 	if (Owner->IsLocallyControlled())
 	{
+		UpdateDetectedEnemy();
+
 		if (Owner->IsPlayerControlled())
 		{
 			DetectInteractableActor();
-			UpdateDetectedEnemy();
 		}
 	}
 }
@@ -145,11 +148,11 @@ bool UPNDetectComponent::IsDetectableEnemy(const AActor* Enemy) const
 	}
 
 	UPNStatusActorComponent* StatusActorComponent = Enemy->FindComponentByClass<UPNStatusActorComponent>();
-	if(StatusActorComponent == nullptr)
+	if (StatusActorComponent == nullptr)
 	{
 		return false;
 	}
-	
+
 	if (StatusActorComponent->IsDead())
 	{
 		return false;
@@ -281,6 +284,12 @@ void UPNDetectComponent::SetDetectedEnemy(const AActor* InDetectedEnemy)
 	if (IsValid(DetectedEnemy))
 	{
 		OnDetectedDelegate.Broadcast();
+	}
+
+	APawn* Owner = GetOwner<APawn>();
+	if (APNAIController* AIController = Cast<APNAIController>(Owner->GetController()))
+	{
+		AIController->OnDetectedEnemy(DetectedEnemy);
 	}
 }
 

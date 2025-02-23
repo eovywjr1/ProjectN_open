@@ -24,7 +24,7 @@ void IPNActorComponentCreatorInterface::CreateActorComponent(EActorType ActorTyp
 	UPNInteractionComponent* InteractionComponent = NewObject<UPNInteractionComponent>(SelfActor, TEXT("InteractionComponent"));
 	InteractionComponent->RegisterComponent();
 
-	if (ActorType >= EActorType::Enemy)
+	if (ActorType >= EActorType::Monster)
 	{
 		UPNSkillComponent* SkillComponent = NewObject<UPNSkillComponent>(SelfActor, TEXT("SkillComponent"));
 		SkillComponent->RegisterComponent();

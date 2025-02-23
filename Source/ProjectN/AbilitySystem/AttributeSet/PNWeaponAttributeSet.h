@@ -21,7 +21,7 @@ public:
 	TObjectPtr<UAnimMontage> AttackActionMontage = nullptr;
 	
 	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UGameplayEffect> GameplayEffect = nullptr;
+	FName SkillDataTableIndex = NAME_None;
 	
 	UPROPERTY(EditDefaultsOnly)
 	FName AttackActionMontageSectionName = NAME_None;

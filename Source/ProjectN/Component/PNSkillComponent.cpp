@@ -5,14 +5,22 @@
 
 #include "PNGameplayTags.h"
 #include "AbilitySystem/PNAbilitySystemComponent.h"
+#include "AbilitySystem/AttributeSet/PNPlayerAttributeSet.h"
 #include "AbilitySystem/AttributeSet/PNWeaponAttributeSet.h"
+#include "DataTable/SkillDataTable.h"
 #include "Interface/PNAbilitySystemInterface.h"
+#include "Subsystem/PNGameDataSubsystem.h"
 
 void UPNSkillComponent::ClearCombo()
 {
 	check(RootComboNode.IsValid());
 
 	CurrentComboNode = RootComboNode;
+
+	if (!HasAuthority())
+	{
+		ServerClearCombo();
+	}
 }
 
 const FAttackData* UPNSkillComponent::ExecuteNextCombo(const FGameplayTag NextAttackTag)
@@ -35,6 +43,11 @@ const FAttackData* UPNSkillComponent::ExecuteNextCombo(const FGameplayTag NextAt
 	return CurrentComboNode.Pin()->ComboData;
 }
 
+void UPNSkillComponent::ServerClearCombo_Implementation()
+{
+	ClearCombo();
+}
+
 void UPNSkillComponent::ServerExecuteNextCombo_Implementation(const FGameplayTag NextAttackTag)
 {
 	const FAttackData* CurrentComboData = ExecuteNextCombo(NextAttackTag);
@@ -43,11 +56,18 @@ void UPNSkillComponent::ServerExecuteNextCombo_Implementation(const FGameplayTag
 		return;
 	}
 
-	if (CurrentComboData->GameplayEffect)
+	if (!CurrentComboData->SkillDataTableIndex.IsNone())
 	{
-		UGameplayEffect* AttackGameplayEffect = CurrentComboData->GameplayEffect->GetDefaultObject<UGameplayEffect>();
+		UGameplayEffect* SkillEffect = NewObject<UGameplayEffect>(this, FName(TEXT("SkillEffect")));
+		SkillEffect->DurationPolicy = EGameplayEffectDurationType::Instant;
+
+		if (const FSkillDataTable* SkillDataTable = UPNGameDataSubsystem::Get(GetWorld())->GetData<FSkillDataTable>(CurrentComboData->SkillDataTableIndex))
+		{
+			SkillDataTable->ApplySkillModifiers(*SkillEffect);
+		}
+
 		UPNAbilitySystemComponent* AbilitySystemComponent = Cast<IPNAbilitySystemInterface>(GetOwner())->GetPNAbilitySystemComponent();
-		AbilitySystemComponent->ApplyGameplayEffectToSelf(AttackGameplayEffect);
+		AbilitySystemComponent->ApplyGameplayEffectToSelf(SkillEffect);
 	}
 }
 
@@ -77,6 +97,27 @@ bool UPNSkillComponent::IsCurrentCombo(const FGameplayTag AttackTag)
 
 	const FAttackData* CurrentComboData = CurrentComboNode.Pin()->ComboData;
 	return CurrentComboData && CurrentComboData->AttackTag.MatchesTagExact(AttackTag);
+}
+
+void UPNSkillComponent::ServerPostSkillProcess_Implementation(const bool bHit)
+{
+	if (bHit)
+	{
+		const FAttackData* CurrentComboData = CurrentComboNode.Pin()->ComboData;
+		if (CurrentComboData && !CurrentComboData->SkillDataTableIndex.IsNone())
+		{
+			UGameplayEffect* SkillEffect = NewObject<UGameplayEffect>(this, FName(TEXT("PostSkillEffect")));
+			SkillEffect->DurationPolicy = EGameplayEffectDurationType::Instant;
+
+			if (const FSkillDataTable* SkillDataTable = UPNGameDataSubsystem::Get(GetWorld())->GetData<FSkillDataTable>(CurrentComboData->SkillDataTableIndex))
+			{
+				SkillDataTable->ApplyPostSkillModifiers(*SkillEffect);
+			}
+
+			UPNAbilitySystemComponent* AbilitySystemComponent = Cast<IPNAbilitySystemInterface>(GetOwner())->GetPNAbilitySystemComponent();
+			AbilitySystemComponent->ApplyGameplayEffectToSelf(SkillEffect);
+		}
+	}
 }
 
 bool UPNSkillComponent::IsEnableSkill(const FGameplayTag InputTag) const
@@ -176,13 +217,17 @@ bool UPNSkillComponent::IsEnableAttack(const FAttackData* AttackData) const
 		return false;
 	}
 
-	if (AttackData->GameplayEffect)
+	if (!AttackData->SkillDataTableIndex.IsNone())
 	{
-		const UGameplayEffect* AttackGameplayEffect = AttackData->GameplayEffect->GetDefaultObject<UGameplayEffect>();
-		UAbilitySystemComponent* AbilitySystemComponent = Cast<IAbilitySystemInterface>(GetOwner())->GetAbilitySystemComponent();
-		if (!AbilitySystemComponent->CanApplyAttributeModifiers(AttackGameplayEffect, 1, AbilitySystemComponent->MakeEffectContext()))
+		if (const FSkillDataTable* SkillDataTable = UPNGameDataSubsystem::Get(GetWorld())->GetData<FSkillDataTable>(AttackData->SkillDataTableIndex))
 		{
-			return false;
+			UAbilitySystemComponent* AbilitySystemComponent = Cast<IAbilitySystemInterface>(GetOwner())->GetAbilitySystemComponent();
+			const float CurrentSR = AbilitySystemComponent->GetNumericAttribute(UPNPlayerAttributeSet::GetSRAttribute());
+
+			if (CurrentSR < SkillDataTable->GetUseSkillResource())
+			{
+				return false;
+			}
 		}
 	}
 

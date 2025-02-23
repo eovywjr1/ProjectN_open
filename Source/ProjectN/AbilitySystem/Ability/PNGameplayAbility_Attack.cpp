@@ -72,13 +72,19 @@ void UPNGameplayAbility_Attack::ActivateAbility(const FGameplayAbilitySpecHandle
 
 void UPNGameplayAbility_Attack::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
+	bChargeAttack = false;
+	AttackData = nullptr;
+
 	Cast<ACharacter>(ActorInfo->AvatarActor.Get())->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
 	GetAbilitySystemComponentFromActorInfo()->RemoveLooseGameplayTag(FPNGameplayTags::Get().Action_Attack, 1);
 	EnableExecuteAttack();
 
-	if (UPNSkillComponent* SkillComponent = GetAvatarActorFromActorInfo()->FindComponentByClass<UPNSkillComponent>())
+	if (!bWasCancelled)
 	{
-		SkillComponent->ClearCombo();
+		if (UPNSkillComponent* SkillComponent = GetAvatarActorFromActorInfo()->FindComponentByClass<UPNSkillComponent>())
+		{
+			SkillComponent->ClearCombo();
+		}
 	}
 
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
@@ -232,6 +238,10 @@ void UPNGameplayAbility_Attack::OnAttackHitTraceResultCallback(const FGameplayAb
 			TargetStatusActorComponent->ServerRequestAttackDamage(AvatarActor, TargetActorCast);
 		}
 	}
+
+	const bool bHit = !TargetActors.IsEmpty();
+	UPNSkillComponent* AvatarSkillActorComponent = AvatarActor->FindComponentByClass<UPNSkillComponent>();
+	AvatarSkillActorComponent->ServerPostSkillProcess(bHit);
 }
 
 bool UPNGameplayAbility_Attack::IsEnableExecuteAttack() const

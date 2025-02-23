@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
+#include "Components/PawnComponent.h"
 #include "PNDetectComponent.generated.h"
 
 enum class EDetectType : uint8
@@ -15,7 +15,7 @@ enum class EDetectType : uint8
 DECLARE_MULTICAST_DELEGATE(FOnDetectedDelegate);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class PROJECTN_API UPNDetectComponent : public UActorComponent
+class PROJECTN_API UPNDetectComponent : public UPawnComponent
 {
 	GENERATED_BODY()
 
@@ -26,7 +26,7 @@ public:
 	void SetDetectTypeAndUpdateDetect(const EDetectType InDetectType);
 
 private:
-	UPNDetectComponent();
+	UPNDetectComponent(const FObjectInitializer& ObjectInitializer);
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction) override final;
 	
 	void UpdateDetectedEnemy();

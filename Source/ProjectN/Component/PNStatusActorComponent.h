@@ -30,7 +30,7 @@ public:
 	bool IsDead() const;
 	
 	UFUNCTION(Server, Reliable)
-	void ServerRequestAttackDamage(const AActor* SourceActor, const AActor* TargetActor);
+	void ServerRequestAttackDamage(AActor* SourceActor, const AActor* TargetActor);
 	
 private:
 	UPNStatusActorComponent();
@@ -43,7 +43,7 @@ private:
 	
 	void OnOutOfHp() const;
 	void OnDamaged();
-	void ApplyAttackDamage(const AActor* SourceActor);
+	void ApplyAttackDamage(AActor* SourceActor);
 	
 	void SetPeaceOrFightStatus(const FGameplayTag StatusTag);
 	

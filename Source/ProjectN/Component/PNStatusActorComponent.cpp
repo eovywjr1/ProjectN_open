@@ -117,7 +117,7 @@ bool UPNStatusActorComponent::IsDead() const
 	return false;
 }
 
-void UPNStatusActorComponent::ServerRequestAttackDamage_Implementation(const AActor* SourceActor, const AActor* TargetActor)
+void UPNStatusActorComponent::ServerRequestAttackDamage_Implementation(AActor* SourceActor, const AActor* TargetActor)
 {
 	check(GetOwner()->HasAuthority());
 
@@ -137,7 +137,7 @@ void UPNStatusActorComponent::ServerRequestAttackDamage_Implementation(const AAc
 	TargetActor->FindComponentByClass<UPNStatusActorComponent>()->ApplyAttackDamage(SourceActor);
 }
 
-void UPNStatusActorComponent::ApplyAttackDamage(const AActor* SourceActor)
+void UPNStatusActorComponent::ApplyAttackDamage(AActor* SourceActor)
 {
 	check(GetOwner()->HasAuthority());
 
@@ -153,7 +153,7 @@ void UPNStatusActorComponent::ApplyAttackDamage(const AActor* SourceActor)
 
 	UPNAbilitySystemComponent* AbilitySystemComponent = AbilitySystemInterface->GetPNAbilitySystemComponent();
 	FGameplayEffectContextHandle EffectContextHandle = AbilitySystemComponent->MakeEffectContext();
-	EffectContextHandle.AddSourceObject(SourceActor);
+	EffectContextHandle.AddInstigator(SourceActor, nullptr);
 
 	FGameplayEffectSpecHandle EffectSpecHandle = AbilitySystemComponent->MakeOutgoingSpecByGameplayEffect(DamageEffect, 1, EffectContextHandle);
 	if (EffectSpecHandle.IsValid())

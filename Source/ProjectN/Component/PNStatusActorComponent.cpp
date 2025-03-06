@@ -128,8 +128,7 @@ void UPNStatusActorComponent::ServerRequestAttackDamage_Implementation(AActor* S
 
 	// 초기 단계에서 러프하게 거리 검증
 	// 추후 무기/공격/스킬 기획에 따라 거리 검증이 변경될 수 있음
-	const float DefaultCheckAttackDistance = static_cast<float>(EPNDistanceUnit::DefaultMeasurementUnit);
-	if (SourceActor->GetDistanceTo(TargetActor) > DefaultCheckAttackDistance)
+	if (SourceActor->GetDistanceTo(TargetActor) > DefaultMeasurementUnit)
 	{
 		return;
 	}
@@ -217,7 +216,7 @@ void UPNStatusActorComponent::OnInitializeAbilitySystem()
 		AbilitySystemComponent->RegisterGameplayTagEvent(FPNGameplayTags::Get().Action_Guard, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &ThisClass::OnActionTagChanged);
 	}
 
-	if (OwnerCast->GetController() && OwnerCast->GetController()->IsLocalController())
+	if (IsClientActor(Owner))
 	{
 		Owner->FindComponentByClass<UPNDetectComponent>()->OnDetectedDelegate.AddUObject(this, &ThisClass::OnDetected);
 	}
@@ -286,10 +285,9 @@ void UPNStatusActorComponent::SetPeaceOrFightStatus(const FGameplayTag StatusTag
 	if (IPNAbilitySystemInterface* OwnerAbilitySystemInterface = GetOwner<IPNAbilitySystemInterface>())
 	{
 		UAbilitySystemComponent* AbilitySystemComponent = OwnerAbilitySystemInterface->GetAbilitySystemComponent();
-		check(AbilitySystemComponent);
-
-		AbilitySystemComponent->SetLooseGameplayTagCount(FPNGameplayTags::Get().Status_Fight, 0);
-		AbilitySystemComponent->SetLooseGameplayTagCount(FPNGameplayTags::Get().Status_Peace, 0);
+		const FGameplayTag InverseStatusTag = StatusTag.MatchesTag(FPNGameplayTags::Get().Status_Peace) ? FPNGameplayTags::Get().Status_Peace : FPNGameplayTags::Get().Status_Fight;
+		
+		AbilitySystemComponent->SetLooseGameplayTagCount(InverseStatusTag, 0);
 		AbilitySystemComponent->SetLooseGameplayTagCount(StatusTag, 1);
 	}
 

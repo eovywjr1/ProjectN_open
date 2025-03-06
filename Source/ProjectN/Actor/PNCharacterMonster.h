@@ -16,5 +16,7 @@ class PROJECTN_API APNCharacterMonster : public APNCharacter, public IPNActorCom
 	GENERATED_BODY()
 	
 private:
+	APNCharacterMonster();
+	
 	virtual void PreInitializeComponents() override final;
 };

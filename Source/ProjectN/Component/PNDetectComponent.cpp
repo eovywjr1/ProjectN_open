@@ -7,6 +7,8 @@
 #include "PNInteractionComponent.h"
 #include "PNPercent.h"
 #include "PNStatusActorComponent.h"
+#include "Actor/PNCharacterMonster.h"
+#include "Actor/PNCharacterPlayer.h"
 #include "AI/PNAIController.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -14,12 +16,12 @@
 
 // 몬스터 감지 관련 기획이 나온 후 변경될 수 있음
 constexpr float DefaultDetectAngle = 90.0f;
-constexpr float DefaultCheckDetectEnemyDistance = 10.0f * static_cast<uint16>(EPNDistanceUnit::Meter);
-constexpr float LockOnCheckDetectEnemyDistance = 10.0f * static_cast<uint16>(EPNDistanceUnit::Meter);
+constexpr float DefaultCheckDetectEnemyDistance = 10.0f * Meter;
+constexpr float LockOnCheckDetectEnemyDistance = 10.0f * Meter;
 constexpr uint8 GridDivisionCount = 10;
 constexpr uint32 TotalGridPoints = GridDivisionCount * GridDivisionCount;
 
-constexpr float InteractDetectDistance = 2.0f * static_cast<uint16>(EPNDistanceUnit::Meter);
+constexpr float InteractDetectDistance = 2.0f * Meter;
 
 const FPNPercent DetectVisibleAreaRate(30);
 
@@ -50,6 +52,7 @@ UPNDetectComponent::UPNDetectComponent(const FObjectInitializer& ObjectInitializ
 	  CheckDetectEnemyDistance(DefaultCheckDetectEnemyDistance)
 {
 	PrimaryComponentTick.bCanEverTick = true;
+	SetIsReplicatedByDefault(true);
 }
 
 void UPNDetectComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -57,7 +60,7 @@ void UPNDetectComponent::TickComponent(float DeltaTime, enum ELevelTick TickType
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	APawn* Owner = GetOwner<APawn>();
-	if (Owner->IsLocallyControlled())
+	if (IsClientActor(Owner))
 	{
 		UpdateDetectedEnemy();
 
@@ -81,15 +84,13 @@ void UPNDetectComponent::UpdateDetectedEnemy()
 
 void UPNDetectComponent::DetectEnemy(TArray<const AActor*>& InSortedDetectedEnemies) const
 {
-	AActor* Owner = GetOwner();
-	check(IsValid(Owner));
-
+	APawn* Owner = GetPawn<APawn>();
 	TArray<AActor*> ActorsToIgnore;
 	TArray<AActor*> OverlappingActors;
 	const FVector OwnerLocation = Owner->GetActorLocation();
+	UClass* EnemyFilterClass = Owner->IsPlayerControlled() ? APNCharacterMonster::StaticClass() : APNCharacterPlayer::StaticClass();
 
-	// Todo. 적 타입 걸러야 함
-	UKismetSystemLibrary::SphereOverlapActors(GetWorld(), OwnerLocation, CheckDetectEnemyDistance, TArray<TEnumAsByte<EObjectTypeQuery>>(), APawn::StaticClass(), ActorsToIgnore, OverlappingActors);
+	UKismetSystemLibrary::SphereOverlapActors(GetWorld(), OwnerLocation, CheckDetectEnemyDistance, TArray<TEnumAsByte<EObjectTypeQuery>>(), EnemyFilterClass, ActorsToIgnore, OverlappingActors);
 
 	InSortedDetectedEnemies.Reserve(OverlappingActors.Num());
 
@@ -103,7 +104,6 @@ void UPNDetectComponent::DetectEnemy(TArray<const AActor*>& InSortedDetectedEnem
 		InSortedDetectedEnemies.Add(Actor);
 	}
 
-	// 정렬 기준이 추후 변경될 수 있음 
 	InSortedDetectedEnemies.Shrink();
 	InSortedDetectedEnemies.Sort([OwnerLocation](const AActor& A, const AActor& B)
 	{
@@ -279,6 +279,11 @@ bool UPNDetectComponent::IsDetectableEnemy(const AActor* Enemy) const
 
 void UPNDetectComponent::SetDetectedEnemy(const AActor* InDetectedEnemy)
 {
+	if (DetectedEnemy == InDetectedEnemy)
+	{
+		return;
+	}
+
 	DetectedEnemy = InDetectedEnemy;
 
 	if (IsValid(DetectedEnemy))
@@ -287,10 +292,30 @@ void UPNDetectComponent::SetDetectedEnemy(const AActor* InDetectedEnemy)
 	}
 
 	APawn* Owner = GetOwner<APawn>();
-	if (APNAIController* AIController = Cast<APNAIController>(Owner->GetController()))
+	AController* OwnerController = Owner->GetController();
+	if (APNAIController* AIController = Cast<APNAIController>(OwnerController))
 	{
 		AIController->OnDetectedEnemy(DetectedEnemy);
 	}
+
+	// AIController는 클라이언트에서 없기 때문에 단순히 존재 유무만 판별
+	// 몬스터의 적은 플레이어만 가능하다는 가정 하에 플레이어(적)를 통한 RPC 호출
+	if ( IsClientActor(Owner) && InDetectedEnemy && (!OwnerController || !OwnerController->IsPlayerController()))
+	{
+ 		InDetectedEnemy->FindComponentByClass<UPNDetectComponent>()->ServerSetDetectedEnemy(this, InDetectedEnemy);
+	}
+}
+
+void UPNDetectComponent::ServerSetDetectedEnemy_Implementation(UPNDetectComponent* TargetComponent, const AActor* InDetectedEnemy)
+{
+	if (!IsValid(TargetComponent))
+	{
+		return;
+	}
+	
+	// Todo. 검증 추후 추가
+
+	TargetComponent->SetDetectedEnemy(InDetectedEnemy);
 }
 
 void UPNDetectComponent::DetectInteractableActor() const

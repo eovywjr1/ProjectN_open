@@ -34,13 +34,13 @@ void IPNActorComponentCreatorInterface::CreateActorComponent(EActorType ActorTyp
 
 		UPNStatusActorComponent* StatusComponent = NewObject<UPNStatusActorComponent>(SelfActor, TEXT("StatusComponent"));
 		StatusComponent->RegisterComponent();
+		
+		UPNEquipmentComponent* EquipmentComponent = NewObject<UPNEquipmentComponent>(SelfActor, TEXT("EquipmentComponent"));
+		EquipmentComponent->RegisterComponent();
 	}
 
 	if (ActorType == EActorType::Player)
 	{
-		UPNEquipmentComponent* EquipmentComponent = NewObject<UPNEquipmentComponent>(SelfActor, TEXT("EquipmentComponent"));
-		EquipmentComponent->RegisterComponent();
-
 		UPNPlayerInputComponent* PNPlayerInputComponent = NewObject<UPNPlayerInputComponent>(SelfActor, TEXT("PlayerInputComponent"));
 		PNPlayerInputComponent->RegisterComponent();
 

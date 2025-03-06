@@ -34,6 +34,9 @@ private:
 	bool IsDetectableEnemy(const AActor* Enemy) const;
 	void SetDetectedEnemy(const AActor* InDetectedEnemy);
 	
+	UFUNCTION(Server, Reliable)
+	void ServerSetDetectedEnemy(UPNDetectComponent* TargetComponent, const AActor* InDetectedEnemy);
+	
 	void DetectInteractableActor() const;
 	
 public:

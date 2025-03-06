@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Engine/DataTable.h"
+#include "PNDataTable.h"
 #include "StatusDataTable.Generated.h"
 
 UENUM()
@@ -15,7 +15,7 @@ enum class EStatusType : uint8
 };
 
 USTRUCT()
-struct FStatusDataTable : public FTableRowBase
+struct FStatusDataTable : public FPNDataTable
 {
 	GENERATED_USTRUCT_BODY()
 

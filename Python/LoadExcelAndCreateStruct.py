@@ -23,11 +23,11 @@ def CreateStruct(StructPath: str, StructName: str, PropertyAndTypeList: Dict[str
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Engine/DataTable.h"
+#include "PNDataTable.h"
 #include "{StructName}.generated.h"
 
 USTRUCT()
-struct F{StructName} : public FTableRowBase
+struct F{StructName} : public FPNDataTable
 {{
     GENERATED_USTRUCT_BODY()
 

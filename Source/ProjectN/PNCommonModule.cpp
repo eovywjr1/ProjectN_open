@@ -1,5 +1,12 @@
-#pragma once
 
 #include "PNCommonModule.h"
 
-const float CheckDetectEnemyPeriod = 1.0f;
+bool IsServerActor(const AActor* Actor)
+{
+	return Actor->GetNetMode() != NM_Client;
+}
+
+bool IsClientActor(const AActor* Actor)
+{
+	return Actor->GetNetMode() != NM_DedicatedServer;
+}

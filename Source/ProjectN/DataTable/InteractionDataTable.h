@@ -2,12 +2,12 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
-#include "Engine/DataTable.h"
+#include "PNDataTable.h"
 #include "InteractionDataTable.Generated.h"
 
 
 USTRUCT()
-struct FInteractionDataTable : public FTableRowBase
+struct FInteractionDataTable : public FPNDataTable
 {
 	GENERATED_USTRUCT_BODY()
 

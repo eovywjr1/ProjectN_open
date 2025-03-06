@@ -45,7 +45,9 @@ public:
 
 private:
 	void LoadDataTable();
-
+	void PostLoadDataTables();
+	
+private:
 	TMap<TObjectPtr<const UScriptStruct>, TMap<FName, TObjectPtr<const FTableRowBase>>> DataMap;
 };
 

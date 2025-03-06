@@ -9,7 +9,7 @@
 #include "Net/UnrealNetwork.h"
 
 constexpr const uint8 DefaultWalkSpeedDurationPerDefaultMeasurementUnit = 16;
-constexpr const uint16 DefaultWalkSpeed = static_cast<uint16>(EPNDistanceUnit::DefaultMeasurementUnit) / DefaultWalkSpeedDurationPerDefaultMeasurementUnit;
+constexpr const uint16 DefaultWalkSpeed = DefaultMeasurementUnit / DefaultWalkSpeedDurationPerDefaultMeasurementUnit;
 
 UPNPawnAttributeSet::UPNPawnAttributeSet()
 	: MaxHp(1000.0f),

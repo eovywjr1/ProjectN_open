@@ -3,7 +3,7 @@
 
 #include "PNGameDataSubsystem.h"
 
-#include "Engine/DataTable.h"
+#include "DataTable/PNDataTable.h"
 #include "Engine/ObjectLibrary.h"
 
 void UPNGameDataSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -46,10 +46,26 @@ void UPNGameDataSubsystem::LoadDataTable()
 
 		const UScriptStruct* DataTableStruct = DataTable->GetRowStruct();
 		TMap<FName, TObjectPtr<const FTableRowBase>>& TypeMap = DataMap.FindOrAdd(DataTableStruct);
-
+		
 		DataTable->ForeachRow<FTableRowBase>(TEXT(""), [&TypeMap](const FName& RowName, const FTableRowBase& Data)
 		{
 			TypeMap.Add(RowName, &Data);
 		});
+	}
+	
+	PostLoadDataTables();
+}
+
+void UPNGameDataSubsystem::PostLoadDataTables()
+{
+	for (auto& DataMapTuple : DataMap)
+	{
+		TMap<FName, TObjectPtr<const FTableRowBase>>& DataTableMap = DataMapTuple.Value;
+		for (auto& DataTableMapTuple : DataTableMap)
+		{
+			const FPNDataTable* DataTable = static_cast<const FPNDataTable*>(DataTableMapTuple.Value.Get());
+			// 데이터테이블을 안전하게 소유하기 위해 const로 저장하고, 초기화가 필요한 곳에 const_cast를 사용 
+			const_cast<FPNDataTable*>(DataTable)->PostLoadDataTable();
+		}
 	}
 }

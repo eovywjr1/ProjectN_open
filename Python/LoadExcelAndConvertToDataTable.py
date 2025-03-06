@@ -83,7 +83,7 @@ def ConvertExcelToCSV(ExcelFileNameAndExtension, SheetName, SheetData: pd.DataFr
         return
 
     PropertyRowIndex = int(SheetData[PropertyMask].index[0])
-    TypeRowIndex = PropertyRowIndex - 1
+    TypeRowIndex = PropertyRowIndex + 1
     StartColIndex = int(PropertyColumnIndex + 1)
     PropertyRowDataList = SheetData.iloc[PropertyRowIndex, StartColIndex:]
 
@@ -105,7 +105,7 @@ def ConvertExcelToCSV(ExcelFileNameAndExtension, SheetName, SheetData: pd.DataFr
 
             Type = UnrealTypeMapping.get(str(SheetData.iloc[TypeRowIndex, ExcelActualColumnIndex]), None)
             if Type is None:
-                unreal.log_error(f"{ExcelFileNameAndExtension} 파일의 {SheetName} 워크시트에 {ExcelActualColumnIndex} 행에 Type({Type})이 int, string, list:int, list:string이 아닙니다. 수정해주세요")
+                unreal.log_error(f"{ExcelFileNameAndExtension} 파일의 {SheetName} 워크시트에 {ExcelActualColumnIndex} 열에 Type({str(SheetData.iloc[TypeRowIndex, ExcelActualColumnIndex])})이 int, string, list:int, list:string이 아닙니다. 수정해주세요")
                 return
             
             UnrealTypeDict[Property] = Type
@@ -113,7 +113,7 @@ def ConvertExcelToCSV(ExcelFileNameAndExtension, SheetName, SheetData: pd.DataFr
     CSVData = []
     CSVData.append(','.join(LoadPropertyList))
         
-    StartRowIndex = PropertyRowIndex + 1
+    StartRowIndex = TypeRowIndex + 1
     IndexList = []
 
     for RowIndex in range(StartRowIndex, len(SheetData)):
@@ -171,12 +171,12 @@ def ConvertExcelToCSV(ExcelFileNameAndExtension, SheetName, SheetData: pd.DataFr
 def ConvertCSVToDataTable(SheetName):
     try:
         DataTableDir = "/Game/ProjectN/DataTable"
-        DataTablePath = DataTableDir + f"/DT_{SheetName}"
+        DataTablePath = DataTableDir + f"/{SheetName}"
         
         if UnrealEditorAssetLib.does_asset_exist(DataTablePath):
             UnrealEditorAssetLib.delete_asset(DataTablePath)
 
-        DataTableStructHeaderPath = f"/Script/ProjectN.{SheetName}"
+        DataTableStructHeaderPath = f"/Script/ProjectN.{SheetName}DataTable"
         DataTableStructObject = unreal.load_object(None, DataTableStructHeaderPath)
         if not DataTableStructObject:
             unreal.log_error(f"해당 데이터 테이블 구조체가 없습니다. 클라에게 요청해주세요 {DataTableStructHeaderPath}")
@@ -188,7 +188,7 @@ def ConvertCSVToDataTable(SheetName):
         DataTableTask = unreal.AssetImportTask()
         DataTableTask.filename = f"{CSVDir}/{SheetName}.csv"
         DataTableTask.destination_path = DataTableDir
-        DataTableTask.destination_name = f"DT_{SheetName}"
+        DataTableTask.destination_name = f"{SheetName}"
         DataTableTask.automated = True
         DataTableTask.save = True
         DataTableTask.factory = DatatableFactory

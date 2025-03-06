@@ -1,14 +1,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameplayTagContainer.h"
-#include "Engine/DataTable.h"
+#include "PNDataTable.h"
 #include "SkillDataTable.Generated.h"
 
 class UGameplayEffect;
 
 USTRUCT()
-struct FSkillDataTable : public FTableRowBase
+struct FSkillDataTable : public FPNDataTable
 {
 	GENERATED_USTRUCT_BODY()
 	

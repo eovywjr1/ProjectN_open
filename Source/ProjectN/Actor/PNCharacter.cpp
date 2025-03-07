@@ -87,13 +87,19 @@ APNCharacter::APNCharacter(const FObjectInitializer& ObjectInitializer)
 void APNCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
-	
+
 	ActorExtensionComponent = FindComponentByClass<UPNActorExtensionComponent>();
 	check(ActorExtensionComponent);
 }
 
 UAbilitySystemComponent* APNCharacter::GetAbilitySystemComponent() const
 {
+	if (ActorExtensionComponent == nullptr)
+	{
+		ActorExtensionComponent = FindComponentByClass<UPNActorExtensionComponent>();
+		check(ActorExtensionComponent);
+	}
+
 	return ActorExtensionComponent->GetAbilitySystemComponent();
 }
 

@@ -178,6 +178,11 @@ UPNSkillComponent::UPNSkillComponent(const FObjectInitializer& ObjectInitializer
 	CurrentComboNode = RootComboNode;
 }
 
+void UPNSkillComponent::OnEquipWeapon()
+{
+	InitComboTree();
+}
+
 void UPNSkillComponent::InitComboTree()
 {
 	check(RootComboNode.IsValid());

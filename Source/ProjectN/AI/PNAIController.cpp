@@ -42,6 +42,6 @@ void APNAIController::OnPossess(APawn* InPawn)
 			}
 		}
 		
-		GetPawn()->FindComponentByClass<UPNEquipmentComponent>()
+		GetPawn()->FindComponentByClass<UPNEquipmentComponent>()->RequestEquip(MonsterDataTable->GetWeaponItemKey());
 	}
 }

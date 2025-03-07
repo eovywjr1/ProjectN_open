@@ -38,7 +38,7 @@ private:
 
 protected:
 	UPROPERTY()
-	TObjectPtr<UPNActorExtensionComponent> ActorExtensionComponent;
+	mutable TObjectPtr<UPNActorExtensionComponent> ActorExtensionComponent;
 
 private:
 	UPROPERTY(EditDefaultsOnly)

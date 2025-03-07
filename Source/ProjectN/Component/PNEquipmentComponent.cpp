@@ -36,6 +36,14 @@ void UPNEquipmentComponent::RequestEquip(const FName ItemKey)
 
 	EquipSlots[EquipSlotType] = ItemKey;
 
+	if (UPNAttributeSet* EquipAttributeSet = EquipmentDataTable->GetWeaponAttributeSet())
+	{
+		check(EquipSlotType == EEquipSlotType::Weapon);
+
+		GetOwner<IPNAbilitySystemInterface>()->GetAbilitySystemComponent()->AddSpawnedAttribute(EquipAttributeSet);
+		GetOwner()->FindComponentByClass<UPNSkillComponent>()->OnEquipWeapon();
+	}
+
 	UPNStatusActorComponent* StatusComponent = Owner->FindComponentByClass<UPNStatusActorComponent>();
 	StatusComponent->ApplyStatusFromEquipment(EquipmentDataTable);
 
@@ -56,13 +64,13 @@ UPNEquipmentComponent::UPNEquipmentComponent()
 	{
 		EEquipSlotType EnumValue = static_cast<EEquipSlotType>(i);
 		EquipSlots.Add(EnumValue, FName());
-	}	
+	}
 }
 
 void UPNEquipmentComponent::InitializeComponent()
 {
 	Super::InitializeComponent();
-	
+
 	GetOwner<IPNAbilitySystemInterface>()->OnInitializeAbilitySystemDelegate.AddUObject(this, &ThisClass::OnInitializeAbilitySystem);
 }
 
@@ -74,7 +82,7 @@ void UPNEquipmentComponent::OnInitializeAbilitySystem()
 		if (UPNWeaponAttributeSet* WeaponAttributeSet = NewObject<UPNWeaponAttributeSet>(this, WeaponAttributeSetClass))
 		{
 			GetOwner<IPNAbilitySystemInterface>()->GetAbilitySystemComponent()->AddSpawnedAttribute(WeaponAttributeSet);
-			GetOwner()->FindComponentByClass<UPNSkillComponent>()->InitComboTree();
+			GetOwner()->FindComponentByClass<UPNSkillComponent>()->OnEquipWeapon();
 		}
 	}
 }
@@ -83,7 +91,7 @@ void UPNEquipmentComponent::UnEquip(EEquipSlotType UnEquipSlotType)
 {
 	AActor* Owner = GetOwner();
 	check(Owner);
-	
+
 	if (UnEquipSlotType == EEquipSlotType::Invalid || EquipSlots[UnEquipSlotType].IsNone())
 	{
 		return;

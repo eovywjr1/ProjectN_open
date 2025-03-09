@@ -3,6 +3,8 @@
 
 #include "AbilitySystem/PNAbilitySystemComponent.h"
 
+#include "PNCommonModule.h"
+
 void UPNAbilitySystemComponent::AbilityInputPressed(FGameplayTag InputTag)
 {
 	if (!InputTag.IsValid())
@@ -15,7 +17,7 @@ void UPNAbilitySystemComponent::AbilityInputPressed(FGameplayTag InputTag)
 		if (AbilitySpec.Ability && AbilitySpec.DynamicAbilityTags.HasTagExact(InputTag))
 		{
 			AbilitySpec.InputPressed = true;
-			
+
 			if (AbilitySpec.IsActive())
 			{
 				AbilitySpecInputPressed(AbilitySpec);
@@ -68,10 +70,18 @@ FActiveGameplayEffectHandle UPNAbilitySystemComponent::ApplyGameplayEffectToSelf
 	{
 		return FActiveGameplayEffectHandle();
 	}
-	
+
 	FGameplayEffectContextHandle EffectContextHandle = MakeEffectContext();
 	EffectContextHandle.AddSourceObject(GetOwner());
 
 	FGameplayEffectSpecHandle EffectSpecHandle = MakeOutgoingSpecByGameplayEffect(GameplayEffect, 1, EffectContextHandle);
 	return ApplyGameplayEffectSpecToSelf(*EffectSpecHandle.Data.Get());
+}
+
+void UPNAbilitySystemComponent::SetAndReplicateGameplayTagCount(const FGameplayTag& GameplayTag, int32 NewCount)
+{
+	check(IsServerActor(GetOwner()));
+
+	SetLooseGameplayTagCount(GameplayTag, NewCount);
+	SetReplicatedLooseGameplayTagCount(GameplayTag, NewCount);
 }

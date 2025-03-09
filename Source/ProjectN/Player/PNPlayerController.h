@@ -21,23 +21,42 @@ public:
 	void RotationByInput(const FVector2D LookAxisVector);
 
 	void ActivateLockOn();
+	
+	UFUNCTION(Server, Reliable)
+	void ServerSetActivateLockOn(bool bActivate);
+	
 	void DeActivateLockOn();
-	void SetNextPriorityLockOnTargetActor();
+	
+	UFUNCTION(Server, Reliable)
+	void ServerSetNextPriorityLockOnTargetActor();
+	
+	void UpdateLockOnCameraRotation();
+	
+	UFUNCTION(Server, Unreliable)
+	void ServerUpdateControlRotation(FRotator Rotation);
 
 private:
 	APNPlayerController();
 
 	virtual void Tick(float DeltaSeconds) override final;
 	virtual void SetupInputComponent() override final;
+	virtual void OnPossess(APawn* InPawn) override final;
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override final;
 
 	UFUNCTION()
 	void CheckLockOnTimerCallback();
 	
 	void SetLockOnTarget();
+	
+	UFUNCTION()
+	void OnRep_LockOnTargetActor();
 
 private:
-	TObjectPtr<const AActor> LockOnTargetActor = nullptr;
+	UPROPERTY(ReplicatedUsing = OnRep_LockOnTargetActor)
+	APawn* LockOnTargetActor = nullptr;
 
 	FTimerHandle CheckLockOnTimerHandle;
 	FTimerHandle ClearLockOnTargetTimerHandle;
+	
+	float LastRotationYaw = 0.0f;
 };

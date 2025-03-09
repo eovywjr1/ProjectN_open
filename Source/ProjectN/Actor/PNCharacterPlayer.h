@@ -30,7 +30,7 @@ private:
 	
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 	
-	void InitialComponents();
+	void InitializeAbilitySystemComponent();
 	
 private:
 	float RunTargetRotationYaw = 0.0f;

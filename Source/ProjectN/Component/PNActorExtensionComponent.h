@@ -28,7 +28,7 @@ class PROJECTN_API UPNActorExtensionComponent : public UActorComponent
 	GENERATED_BODY()
 	
 public:
-	UPNAbilitySystemComponent* GetAbilitySystemComponent() const { return AbilitySystemComponent; }
+	UPNAbilitySystemComponent* GetAbilitySystemComponent() const;
 	void InitializeAbilitySystem(UPNAbilitySystemComponent* InAbilitySystemComponent, AActor* InOwnerActor);
 	
 private:
@@ -43,6 +43,5 @@ private:
 	UPROPERTY()
 	TObjectPtr<const UPNActorGameData> ActorGameData = nullptr;
 	
-	UPROPERTY()
-	TObjectPtr<UPNAbilitySystemComponent> AbilitySystemComponent = nullptr;
+	mutable TObjectPtr<UPNAbilitySystemComponent> AbilitySystemComponent = nullptr;
 };

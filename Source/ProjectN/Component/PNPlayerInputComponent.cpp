@@ -132,7 +132,7 @@ void UPNPlayerInputComponent::Input_NextLockOnTarget(const FInputActionValue& In
 		return;
 	}
 
-	GetController<APNPlayerController>()->SetNextPriorityLockOnTargetActor();
+	GetController<APNPlayerController>()->ServerSetNextPriorityLockOnTargetActor();
 }
 
 void UPNPlayerInputComponent::Input_LockOn(const FInputActionValue& InputActionValue)

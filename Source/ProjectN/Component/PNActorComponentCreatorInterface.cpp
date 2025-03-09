@@ -8,6 +8,7 @@
 #include "PNEquipmentComponent.h"
 #include "PNInteractionComponent.h"
 #include "PNInventoryComponent.h"
+#include "PNPawnSensingComponent.h"
 #include "PNPlayerInputComponent.h"
 #include "PNSkillComponent.h"
 #include "PNStatusActorComponent.h"
@@ -26,25 +27,37 @@ void IPNActorComponentCreatorInterface::CreateActorComponent(EActorType ActorTyp
 
 	if (ActorType >= EActorType::Monster)
 	{
-		UPNSkillComponent* SkillComponent = NewObject<UPNSkillComponent>(SelfActor, TEXT("SkillComponent"));
-		SkillComponent->RegisterComponent();
+		if (IsServerActor(SelfActor))
+		{
+			UPNSkillComponent* SkillComponent = NewObject<UPNSkillComponent>(SelfActor, TEXT("SkillComponent"));
+			SkillComponent->RegisterComponent();
 
-		UPNDetectComponent* DetectComponent = NewObject<UPNDetectComponent>(SelfActor, TEXT("DetectComponent"));
-		DetectComponent->RegisterComponent();
+			UPNDetectComponent* DetectComponent = NewObject<UPNDetectComponent>(SelfActor, TEXT("DetectComponent"));
+			DetectComponent->RegisterComponent();
 
-		UPNStatusActorComponent* StatusComponent = NewObject<UPNStatusActorComponent>(SelfActor, TEXT("StatusComponent"));
-		StatusComponent->RegisterComponent();
-		
-		UPNEquipmentComponent* EquipmentComponent = NewObject<UPNEquipmentComponent>(SelfActor, TEXT("EquipmentComponent"));
-		EquipmentComponent->RegisterComponent();
+			UPNStatusActorComponent* StatusComponent = NewObject<UPNStatusActorComponent>(SelfActor, TEXT("StatusComponent"));
+			StatusComponent->RegisterComponent();
+
+			UPNPawnSensingComponent* SensingComponent = NewObject<UPNPawnSensingComponent>(SelfActor, TEXT("SensingComponent"));
+			SensingComponent->RegisterComponent();
+		}
 	}
 
 	if (ActorType == EActorType::Player)
 	{
-		UPNPlayerInputComponent* PNPlayerInputComponent = NewObject<UPNPlayerInputComponent>(SelfActor, TEXT("PlayerInputComponent"));
-		PNPlayerInputComponent->RegisterComponent();
+		if (IsServerActor(SelfActor))
+		{
+			UPNEquipmentComponent* EquipmentComponent = NewObject<UPNEquipmentComponent>(SelfActor, TEXT("EquipmentComponent"));
+			EquipmentComponent->RegisterComponent();
 
-		UPNInventoryComponent* InventoryComponent = NewObject<UPNInventoryComponent>(SelfActor, TEXT("InventoryComponent"));
-		InventoryComponent->RegisterComponent();
+			UPNInventoryComponent* InventoryComponent = NewObject<UPNInventoryComponent>(SelfActor, TEXT("InventoryComponent"));
+			InventoryComponent->RegisterComponent();
+		}
+
+		if (IsClientActor(SelfActor))
+		{
+			UPNPlayerInputComponent* PNPlayerInputComponent = NewObject<UPNPlayerInputComponent>(SelfActor, TEXT("PlayerInputComponent"));
+			PNPlayerInputComponent->RegisterComponent();
+		}
 	}
 }

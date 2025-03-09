@@ -5,52 +5,33 @@
 
 #include "PNCommonModule.h"
 #include "PNInteractionComponent.h"
-#include "PNPercent.h"
-#include "PNStatusActorComponent.h"
-#include "Actor/PNCharacterMonster.h"
-#include "Actor/PNCharacterPlayer.h"
+#include "PNPawnSensingComponent.h"
 #include "AI/PNAIController.h"
-#include "Components/CapsuleComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Net/UnrealNetwork.h"
 #include "UI/PNHUD.h"
 
-// 몬스터 감지 관련 기획이 나온 후 변경될 수 있음
-constexpr float DefaultDetectAngle = 90.0f;
-constexpr float DefaultCheckDetectEnemyDistance = 10.0f * Meter;
-constexpr float LockOnCheckDetectEnemyDistance = 10.0f * Meter;
-constexpr uint8 GridDivisionCount = 10;
-constexpr uint32 TotalGridPoints = GridDivisionCount * GridDivisionCount;
-
 constexpr float InteractDetectDistance = 2.0f * Meter;
-
-const FPNPercent DetectVisibleAreaRate(30);
 
 #ifdef WITH_EDITOR
 static TAutoConsoleVariable<bool> InteractionDetectRangeDrawDebug(TEXT("InteractionDetectRangeDrawDebug"), false, TEXT(""), ECVF_Default);
 #endif
 
-void UPNDetectComponent::SetDetectTypeAndUpdateDetect(const EDetectType InDetectType)
+bool UPNDetectComponent::CanDetectEnemy(const APawn* Enemy) const
 {
-	switch (InDetectType)
-	{
-	case EDetectType::Default:
-		{
-			CheckDetectEnemyDistance = DefaultCheckDetectEnemyDistance;
-			break;
-		}
-	case EDetectType::LockOn:
-		{
-			CheckDetectEnemyDistance = LockOnCheckDetectEnemyDistance;
-		}
-	}
+	UPNPawnSensingComponent* SensingComponent = GetOwner()->FindComponentByClass<UPNPawnSensingComponent>();
+	return SensingComponent->CouldSeePawn(Enemy);
+}
 
-	UpdateDetectedEnemy();
+bool UPNDetectComponent::IsDetectedEnemy(const APawn* Enemy) const
+{
+	return Enemy && DetectedEnemies.Find(Enemy);
 }
 
 UPNDetectComponent::UPNDetectComponent(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer),
-	  CheckDetectEnemyDistance(DefaultCheckDetectEnemyDistance)
+	: Super(ObjectInitializer)
 {
+	bWantsInitializeComponent = true;
 	PrimaryComponentTick.bCanEverTick = true;
 	SetIsReplicatedByDefault(true);
 }
@@ -60,268 +41,87 @@ void UPNDetectComponent::TickComponent(float DeltaTime, enum ELevelTick TickType
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	APawn* Owner = GetOwner<APawn>();
-	if (IsClientActor(Owner))
+	if (IsServerActor(Owner) && Owner->IsPlayerControlled())
 	{
-		UpdateDetectedEnemy();
-
-		if (Owner->IsPlayerControlled())
+		if (!CanDetectEnemy(TargetedEnemy))
 		{
-			DetectInteractableActor();
+			SetTargetNextPriorityEnemy();
 		}
+
+		DetectInteractableActor();
 	}
 }
 
-void UPNDetectComponent::UpdateDetectedEnemy()
+void UPNDetectComponent::InitializeComponent()
 {
-	if (IsDetectableEnemy(DetectedEnemy) == false)
-	{
-		TArray<const AActor*> InSortedDetectedEnemies;
-		DetectEnemy(InSortedDetectedEnemies);
+	Super::InitializeComponent();
 
-		SetDetectedEnemy(InSortedDetectedEnemies.IsEmpty() ? nullptr : InSortedDetectedEnemies[0]);
+	if (UPNPawnSensingComponent* SensingComponent = GetOwner()->FindComponentByClass<UPNPawnSensingComponent>())
+	{
+		SensingComponent->OnSeePawn.AddDynamic(this, &ThisClass::OnSeePawn);
 	}
 }
 
-void UPNDetectComponent::DetectEnemy(TArray<const AActor*>& InSortedDetectedEnemies) const
+void UPNDetectComponent::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
 {
-	APawn* Owner = GetPawn<APawn>();
-	TArray<AActor*> ActorsToIgnore;
-	TArray<AActor*> OverlappingActors;
-	const FVector OwnerLocation = Owner->GetActorLocation();
-	UClass* EnemyFilterClass = Owner->IsPlayerControlled() ? APNCharacterMonster::StaticClass() : APNCharacterPlayer::StaticClass();
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	UKismetSystemLibrary::SphereOverlapActors(GetWorld(), OwnerLocation, CheckDetectEnemyDistance, TArray<TEnumAsByte<EObjectTypeQuery>>(), EnemyFilterClass, ActorsToIgnore, OverlappingActors);
+	DOREPLIFETIME(ThisClass, TargetedEnemy);
+}
 
-	InSortedDetectedEnemies.Reserve(OverlappingActors.Num());
-
-	for (const AActor* Actor : OverlappingActors)
+void UPNDetectComponent::SetTargetNextPriorityEnemy()
+{
+	UpdateDetectedPawns();
+	
+	if (DetectedEnemies.IsEmpty())
 	{
-		if (IsDetectableEnemy(Actor) == false)
-		{
-			continue;
-		}
-
-		InSortedDetectedEnemies.Add(Actor);
+		return;
 	}
 
-	InSortedDetectedEnemies.Shrink();
-	InSortedDetectedEnemies.Sort([OwnerLocation](const AActor& A, const AActor& B)
+	TArray<APawn*> DetectedEnemyArray = DetectedEnemies.Array();
+	const FVector OwnerLocation = GetOwner()->GetActorLocation();
+	DetectedEnemyArray.Sort([OwnerLocation](const AActor& A, const AActor& B)
 	{
 		float DistancePlayerToA = FVector::Dist(OwnerLocation, A.GetActorLocation());
 		float DistancePlayerToB = FVector::Dist(OwnerLocation, B.GetActorLocation());
 		return DistancePlayerToA < DistancePlayerToB;
 	});
-}
 
-void UPNDetectComponent::DetectNextPriorityEnemy()
-{
-	TArray<const AActor*> InSortedDetectedEnemies;
-	DetectEnemy(InSortedDetectedEnemies);
-
-	if (InSortedDetectedEnemies.IsEmpty())
+	if (CanDetectEnemy(TargetedEnemy) == false)
 	{
+		SetTargetEnemy(DetectedEnemyArray[0]);
 		return;
 	}
 
-	if (IsDetectableEnemy(DetectedEnemy) == false)
+	const uint32 DetectedEnemyArraySize = DetectedEnemyArray.Num();
+	for (uint32 index = 0; index < DetectedEnemyArraySize; ++index)
 	{
-		SetDetectedEnemy(InSortedDetectedEnemies[0]);
-		return;
-	}
-
-	const uint32 SortedLockOnTargetActorNum = InSortedDetectedEnemies.Num();
-	for (uint32 index = 0; index < SortedLockOnTargetActorNum; ++index)
-	{
-		if (DetectedEnemy == InSortedDetectedEnemies[index])
+		if (TargetedEnemy == DetectedEnemyArray[index])
 		{
-			SetDetectedEnemy(InSortedDetectedEnemies[(index + 1) % SortedLockOnTargetActorNum]);
+			SetTargetEnemy(DetectedEnemyArray[(index + 1) % DetectedEnemyArraySize]);
 			break;
 		}
 	}
 }
 
-bool UPNDetectComponent::IsDetectableEnemy(const AActor* Enemy) const
+void UPNDetectComponent::SetTargetEnemy(APawn* InDetectedEnemy)
 {
-	if (IsValid(Enemy) == false)
-	{
-		return false;
-	}
+	check(IsServerActor(GetOwner()));
 
-	UPNStatusActorComponent* StatusActorComponent = Enemy->FindComponentByClass<UPNStatusActorComponent>();
-	if (StatusActorComponent == nullptr)
-	{
-		return false;
-	}
-
-	if (StatusActorComponent->IsDead())
-	{
-		return false;
-	}
-
-	APawn* Owner = GetOwner<APawn>();
-	check(Owner);
-
-	if (Enemy == GetOwner())
-	{
-		return false;
-	}
-
-	// 일단 캡슐 컴포넌트만 가능, 추후 변경 가능
-	UCapsuleComponent* CapsuleComponent = Enemy->FindComponentByClass<UCapsuleComponent>();
-	if (CapsuleComponent == nullptr)
-	{
-		return false;
-	}
-
-	const FVector OwnerPawnLocation = Owner->GetActorLocation();
-	const FVector TargetLocation = Enemy->GetActorLocation();
-	if (CheckDetectEnemyDistance < FVector::Distance(OwnerPawnLocation, TargetLocation))
-	{
-		return false;
-	}
-
-
-	FVector StartLocation = OwnerPawnLocation;
-	FVector SelfForwardVector = Owner->GetActorForwardVector();
-	float DetectAngle = DefaultDetectAngle;
-
-	if (Owner->IsPlayerControlled())
-	{
-		const APlayerCameraManager* CameraManager = Cast<APlayerController>(Owner->GetController())->PlayerCameraManager;
-		StartLocation = CameraManager->GetCameraLocation();
-		SelfForwardVector = CameraManager->GetActorForwardVector();
-		DetectAngle = CameraManager->GetFOVAngle();
-	}
-
-	const FTransform ComponentTransform = CapsuleComponent->GetComponentTransform();
-	const FVector SelfToEnemy = (TargetLocation - StartLocation).GetSafeNormal();
-
-	const FVector RightVector = FVector::CrossProduct(FVector::UpVector, SelfToEnemy).GetSafeNormal();
-	const FVector UpVector = FVector::CrossProduct(SelfToEnemy, RightVector).GetSafeNormal();
-
-	const float ScaledRadius = CapsuleComponent->GetScaledCapsuleRadius();
-	const float ScaledHalfHeight = CapsuleComponent->GetScaledCapsuleHalfHeight();
-
-	const float BoxHeight = ScaledHalfHeight * 2.0f / GridDivisionCount;
-	const float BoxWidth = (ScaledRadius * 2) / GridDivisionCount;
-
-	FCollisionQueryParams QueryParams;
-	QueryParams.AddIgnoredActor(Owner);
-
-	const float DetectRadian = FMath::DegreesToRadians(DetectAngle);
-	const float CosHalfDetectRadian = FMath::Cos(DetectRadian * 0.5f);
-
-	FThreadSafeCounter TotalPointCounter(0);
-	FThreadSafeCounter VisiblePointCounter(0);
-
-#ifdef ENABLE_DRAW_DEBUG
-	TMap<FVector, bool> CheckPointHits;
-	FCriticalSection CheckPointHitsCriticalSection;
-	CheckPointHits.Reserve(TotalGridPoints);
-#endif
-
-	ParallelFor(TotalGridPoints,
-	            [this, SelfForwardVector, ScaledHalfHeight, ScaledRadius, BoxHeight, BoxWidth, RightVector, UpVector, &ComponentTransform, StartLocation, CosHalfDetectRadian, &TotalPointCounter, &VisiblePointCounter, &QueryParams
-#ifdef ENABLE_DRAW_DEBUG
-		          , &CheckPointHits, &CheckPointHitsCriticalSection
-#endif
-	            ](int32 Index)
-	            {
-		            const int32 HeightIndex = Index / GridDivisionCount;
-		            const int32 WidthIndex = Index % GridDivisionCount;
-
-		            const float VerticalOffset = -ScaledHalfHeight + (BoxHeight / 2) + (BoxHeight * HeightIndex);
-		            const float HorizontalOffset = -ScaledRadius + (BoxWidth / 2) + (BoxWidth * WidthIndex);
-
-		            FVector Point = ComponentTransform.GetLocation();
-		            Point += UpVector * VerticalOffset + RightVector * HorizontalOffset;
-
-		            const FVector LocalPoint = ComponentTransform.InverseTransformPosition(Point);
-		            if (ScaledHalfHeight < FMath::Abs(LocalPoint.Z) || ScaledRadius < FMath::Sqrt(FMath::Square(LocalPoint.X) + FMath::Square(LocalPoint.Y)))
-		            {
-			            return;
-		            }
-
-		            TotalPointCounter.Increment();
-
-		            const FVector DirectionSelfToPoint = (Point - StartLocation).GetSafeNormal();
-		            const float CosAngleSelfToPoint = FVector::DotProduct(SelfForwardVector, DirectionSelfToPoint);
-		            if (CosAngleSelfToPoint < CosHalfDetectRadian)
-		            {
-			            return;
-		            }
-
-		            FHitResult HitResult;
-		            const bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Point, StartLocation, ECC_Visibility, QueryParams);
-		            if (bHit == false)
-		            {
-			            VisiblePointCounter.Increment();
-		            }
-
-		            // #ifdef ENABLE_DRAW_DEBUG
-		            // 		            {
-		            // 			            FScopeLock Lock(&CheckPointHitsCriticalSection);
-		            // 			            CheckPointHits.Add(Point, bHit);
-		            // 		            }
-		            // #endif
-	            });
-
-#ifdef ENABLE_DRAW_DEBUG
-	for (const TPair<FVector, bool>& CheckPointHit : CheckPointHits)
-	{
-		const FColor PointColor = CheckPointHit.Value == false ? FColor::Green : FColor::Red;
-		DrawDebugPoint(GetWorld(), CheckPointHit.Key, 5.0f, PointColor, false, 0.5f);
-	}
-#endif
-
-	return DetectVisibleAreaRate <= FPNPercent::FromFraction(VisiblePointCounter.GetValue(), TotalPointCounter.GetValue());
-}
-
-void UPNDetectComponent::SetDetectedEnemy(const AActor* InDetectedEnemy)
-{
-	if (DetectedEnemy == InDetectedEnemy)
+	if (TargetedEnemy == InDetectedEnemy)
 	{
 		return;
 	}
 
-	DetectedEnemy = InDetectedEnemy;
+	TargetedEnemy = InDetectedEnemy;
 
-	if (IsValid(DetectedEnemy))
-	{
-		OnDetectedDelegate.Broadcast();
-	}
-
-	APawn* Owner = GetOwner<APawn>();
-	AController* OwnerController = Owner->GetController();
-	if (APNAIController* AIController = Cast<APNAIController>(OwnerController))
-	{
-		AIController->OnDetectedEnemy(DetectedEnemy);
-	}
-
-	// AIController는 클라이언트에서 없기 때문에 단순히 존재 유무만 판별
-	// 몬스터의 적은 플레이어만 가능하다는 가정 하에 플레이어(적)를 통한 RPC 호출
-	if ( IsClientActor(Owner) && InDetectedEnemy && (!OwnerController || !OwnerController->IsPlayerController()))
-	{
- 		InDetectedEnemy->FindComponentByClass<UPNDetectComponent>()->ServerSetDetectedEnemy(this, InDetectedEnemy);
-	}
-}
-
-void UPNDetectComponent::ServerSetDetectedEnemy_Implementation(UPNDetectComponent* TargetComponent, const AActor* InDetectedEnemy)
-{
-	if (!IsValid(TargetComponent))
-	{
-		return;
-	}
-	
-	// Todo. 검증 추후 추가
-
-	TargetComponent->SetDetectedEnemy(InDetectedEnemy);
+	OnDetectedDelegate.Broadcast();
 }
 
 void UPNDetectComponent::DetectInteractableActor() const
 {
 	APawn* Owner = GetOwner<APawn>();
-	if (!Owner->Controller->IsPlayerController())
+	if (!Owner->IsPlayerControlled())
 	{
 		return;
 	}
@@ -360,7 +160,7 @@ void UPNDetectComponent::DetectInteractableActor() const
 			if (!InteractionDataTableKey.IsNone())
 			{
 				bDetectedInteractableActor = true;
-				Cast<APNHUD>(GetOwner<APawn>()->GetController<APlayerController>()->GetHUD())->OnDetectedInteractableActorDelegate.Broadcast(HitActor, InteractionDataTableKey);
+				ClientDetectInteractableActor(HitActor, InteractionDataTableKey);
 
 				break;
 			}
@@ -369,6 +169,47 @@ void UPNDetectComponent::DetectInteractableActor() const
 
 	if (!bDetectedInteractableActor)
 	{
-		Cast<APNHUD>(GetOwner<APawn>()->GetController<APlayerController>()->GetHUD())->OnUnDetectedInteractableActorDelegate.Broadcast();
+		ClientDetectInteractableActor(nullptr, NAME_None);
+	}
+}
+
+void UPNDetectComponent::ClientDetectInteractableActor_Implementation(AActor* DetectActor, FName InteractionDataTableKey) const
+{
+	APNHUD* HUD = Cast<APNHUD>(GetOwner<APawn>()->GetController<APlayerController>()->GetHUD());
+	if (DetectActor)
+	{
+		HUD->OnDetectedInteractableActorDelegate.Broadcast(DetectActor, InteractionDataTableKey);
+	}
+	else
+	{
+		HUD->OnUnDetectedInteractableActorDelegate.Broadcast();
+	}
+}
+
+void UPNDetectComponent::OnSeePawn(APawn* Pawn)
+{
+	DetectedEnemies.Add(Pawn);
+}
+
+void UPNDetectComponent::UpdateDetectedPawns()
+{
+	if (DetectedEnemies.IsEmpty())
+	{
+		SetTargetEnemy(nullptr);
+		return;
+	}
+
+	TArray<APawn*> EnemiesToRemove;
+	for (auto Iter = DetectedEnemies.CreateConstIterator(); Iter; ++Iter)
+	{
+		if (!CanDetectEnemy(*Iter))
+		{
+			EnemiesToRemove.Add(*Iter);
+		}
+	}
+
+	for (APawn* EnemyToRemove : EnemiesToRemove)
+	{
+		DetectedEnemies.Remove(EnemyToRemove);
 	}
 }

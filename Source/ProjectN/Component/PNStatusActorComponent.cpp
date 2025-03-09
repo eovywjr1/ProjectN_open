@@ -180,12 +180,11 @@ void UPNStatusActorComponent::InitializeComponent()
 void UPNStatusActorComponent::OnInitializeAbilitySystem()
 {
 	AActor* Owner = GetOwner();
-	APNCharacter* OwnerCast = Cast<APNCharacter>(Owner);
 
-	if (Owner->HasAuthority())
+	if (IsServerActor(Owner))
 	{
-		UAbilitySystemComponent* AbilitySystemComponent = GetOwner<IPNAbilitySystemInterface>()->GetAbilitySystemComponent();
-		check(AbilitySystemComponent);
+		APNCharacter* OwnerCast = Cast<APNCharacter>(Owner);
+		UPNAbilitySystemComponent* AbilitySystemComponent = GetOwner<IPNAbilitySystemInterface>()->GetPNAbilitySystemComponent();
 
 		// Todo. 데이터테이블과 연동해야 함	
 		if (OwnerCast && OwnerCast->GetController() && OwnerCast->GetController()->IsPlayerController())
@@ -197,14 +196,9 @@ void UPNStatusActorComponent::OnInitializeAbilitySystem()
 			AbilitySystemComponent->InitStats(UPNPawnAttributeSet::StaticClass(), nullptr);
 		}
 
-
 		const UPNPawnAttributeSet* PawnAttributeSet = AbilitySystemComponent->GetSet<UPNPawnAttributeSet>();
 		PawnAttributeSet->OnOutOfHp.AddUObject(this, &ThisClass::OnOutOfHp);
 		PawnAttributeSet->OnDamagedDelegate.AddUObject(this, &ThisClass::OnDamaged);
-
-		AbilitySystemComponent->AddLooseGameplayTag(FPNGameplayTags::Get().Status_Peace);
-		FGameplayEventData PayLoad;
-		AbilitySystemComponent->HandleGameplayEvent(FPNGameplayTags::Get().Status_Peace, &PayLoad);
 
 		// Todo. 추후 Pawn을 구현한다면 OnInitializedStatus를 Interface로 선언해야 함
 		if (OwnerCast)
@@ -212,12 +206,11 @@ void UPNStatusActorComponent::OnInitializeAbilitySystem()
 			OwnerCast->OnInitializedStatus();
 		}
 
+		SetPeaceOrFightStatus(FPNGameplayTags::Get().Status_Peace);
+
 		AbilitySystemComponent->RegisterGameplayTagEvent(FPNGameplayTags::Get().Action_Attack, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &ThisClass::OnActionTagChanged);
 		AbilitySystemComponent->RegisterGameplayTagEvent(FPNGameplayTags::Get().Action_Guard, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &ThisClass::OnActionTagChanged);
-	}
 
-	if (IsClientActor(Owner))
-	{
 		Owner->FindComponentByClass<UPNDetectComponent>()->OnDetectedDelegate.AddUObject(this, &ThisClass::OnDetected);
 	}
 }
@@ -284,11 +277,11 @@ void UPNStatusActorComponent::SetPeaceOrFightStatus(const FGameplayTag StatusTag
 
 	if (IPNAbilitySystemInterface* OwnerAbilitySystemInterface = GetOwner<IPNAbilitySystemInterface>())
 	{
-		UAbilitySystemComponent* AbilitySystemComponent = OwnerAbilitySystemInterface->GetAbilitySystemComponent();
-		const FGameplayTag InverseStatusTag = StatusTag.MatchesTag(FPNGameplayTags::Get().Status_Peace) ? FPNGameplayTags::Get().Status_Peace : FPNGameplayTags::Get().Status_Fight;
-		
-		AbilitySystemComponent->SetLooseGameplayTagCount(InverseStatusTag, 0);
-		AbilitySystemComponent->SetLooseGameplayTagCount(StatusTag, 1);
+		UPNAbilitySystemComponent* AbilitySystemComponent = OwnerAbilitySystemInterface->GetPNAbilitySystemComponent();
+		const FGameplayTag InverseStatusTag = StatusTag.MatchesTag(FPNGameplayTags::Get().Status_Peace) ? FPNGameplayTags::Get().Status_Fight : FPNGameplayTags::Get().Status_Peace;
+
+		AbilitySystemComponent->SetAndReplicateGameplayTagCount(InverseStatusTag, 0);
+		AbilitySystemComponent->SetAndReplicateGameplayTagCount(StatusTag, 1);
 	}
 
 	if (StatusTag.MatchesTag(FPNGameplayTags::Get().Status_Fight) && CheckTransitionToPeaceTimerHandle.IsValid() == false)
@@ -299,7 +292,7 @@ void UPNStatusActorComponent::SetPeaceOrFightStatus(const FGameplayTag StatusTag
 
 void UPNStatusActorComponent::CheckTransitionToPeaceTimerCallback()
 {
-	const AActor* DetectedEnemy = GetOwner()->FindComponentByClass<UPNDetectComponent>()->GetDetectedEnemy();
+	const AActor* DetectedEnemy = GetOwner()->FindComponentByClass<UPNDetectComponent>()->GetTargetedEnemy();
 	if (IsValid(DetectedEnemy))
 	{
 		NoEnemyDetectTime = 0.0f;
@@ -317,7 +310,11 @@ void UPNStatusActorComponent::CheckTransitionToPeaceTimerCallback()
 
 void UPNStatusActorComponent::OnDetected()
 {
-	SetPeaceOrFightStatus(FPNGameplayTags::Get().Status_Fight);
+	UPNDetectComponent* DetectComponent = GetOwner()->FindComponentByClass<UPNDetectComponent>();
+	if (DetectComponent->GetTargetedEnemy())
+	{
+		SetPeaceOrFightStatus(FPNGameplayTags::Get().Status_Fight);
+	}
 }
 
 void UPNStatusActorComponent::OnActionTagChanged(const FGameplayTag Tag, int32 NewCount)

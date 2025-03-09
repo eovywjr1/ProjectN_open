@@ -20,4 +20,6 @@ public:
 	
 	FGameplayEffectSpecHandle MakeOutgoingSpecByGameplayEffect(UGameplayEffect* GameplayEffect, float Level, FGameplayEffectContextHandle Context) const;
 	FActiveGameplayEffectHandle ApplyGameplayEffectToSelf(UGameplayEffect* GameplayEffect);
+	
+	void SetAndReplicateGameplayTagCount(const FGameplayTag& GameplayTag, int32 NewCount);
 };

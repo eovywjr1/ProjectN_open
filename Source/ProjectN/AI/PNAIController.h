@@ -15,11 +15,11 @@ class PROJECTN_API APNAIController : public AAIController
 {
 	GENERATED_BODY()
 	
-public:
-	void OnDetectedEnemy(const AActor* Enemy);
-	
 private:
 	virtual void OnPossess(APawn* InPawn) override final;
+	
+	UFUNCTION()
+	void OnDetectedEnemy();
 	
 private:
 	const FMonsterDataTable* MonsterDataTable = nullptr;

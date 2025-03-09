@@ -18,6 +18,16 @@ UPNActorExtensionComponent::UPNActorExtensionComponent(const FObjectInitializer&
 	PrimaryComponentTick.bCanEverTick = false;
 }
 
+UPNAbilitySystemComponent* UPNActorExtensionComponent::GetAbilitySystemComponent() const
+{
+	if(AbilitySystemComponent == nullptr)
+	{
+		AbilitySystemComponent = GetOwner()->FindComponentByClass<UPNAbilitySystemComponent>();
+	}
+
+	return AbilitySystemComponent;
+}
+
 void UPNActorExtensionComponent::InitializeAbilitySystem(UPNAbilitySystemComponent* InAbilitySystemComponent, AActor* InOwnerActor)
 {
 	if (AbilitySystemComponent)
@@ -30,16 +40,17 @@ void UPNActorExtensionComponent::InitializeAbilitySystem(UPNAbilitySystemCompone
 		InAbilitySystemComponent = NewObject<UPNAbilitySystemComponent>(InOwnerActor);
 	}
 
-	if (!InAbilitySystemComponent->IsRegistered())
-	{
-		InAbilitySystemComponent->RegisterComponent();
-	}
-
 	AActor* Owner = GetOwner();
 
 	AbilitySystemComponent = InAbilitySystemComponent;
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
+	
+	if (!InAbilitySystemComponent->IsRegistered())
+	{
+		InAbilitySystemComponent->RegisterComponent();
+	}
+	
 	AbilitySystemComponent->InitAbilityActorInfo(InOwnerActor, Owner);
 
 	if (Owner->HasAuthority() && ActorGameData)

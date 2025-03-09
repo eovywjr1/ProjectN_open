@@ -23,19 +23,19 @@ APNCharacterPlayer::APNCharacterPlayer()
 void APNCharacterPlayer::PreInitializeComponents()
 {
 	Super::PreInitializeComponents();
-	
+
 	CreateActorComponent(EActorType::Player);
 }
 
 void APNCharacterPlayer::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-	
+
 	if (!IsRun())
 	{
 		RunTargetRotationYaw = 0.0f;
 	}
-	
+
 	FRotator TargetRotation = GetActorRotation();
 	TargetRotation.Yaw = Controller->GetControlRotation().Yaw;
 
@@ -43,7 +43,7 @@ void APNCharacterPlayer::Tick(float DeltaSeconds)
 	{
 		TargetRotation.Yaw += RunTargetRotationYaw;
 	}
-	
+
 	const FRotator NewRotation = FMath::RInterpTo(GetActorRotation(), TargetRotation, DeltaSeconds, 10.0f);
 	SetActorRotation(NewRotation);
 }
@@ -52,14 +52,14 @@ void APNCharacterPlayer::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 
-	InitialComponents();
+	InitializeAbilitySystemComponent();
 }
 
 void APNCharacterPlayer::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
 
-	InitialComponents();
+	InitializeAbilitySystemComponent();
 }
 
 void APNCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -69,20 +69,13 @@ void APNCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	FindComponentByClass<UPNPlayerInputComponent>()->InitializePlayerInput(InputComponent);
 }
 
-void APNCharacterPlayer::InitialComponents()
+void APNCharacterPlayer::InitializeAbilitySystemComponent()
 {
 	APNPlayerState* PlayerStateCast = GetPlayerState<APNPlayerState>();
 	check(PlayerStateCast);
 
 	UAbilitySystemComponent* AbilitySystemComponent = PlayerStateCast->GetAbilitySystemComponent();
 	ActorExtensionComponent->InitializeAbilitySystem(Cast<UPNAbilitySystemComponent>(AbilitySystemComponent), PlayerStateCast);
-
-	if (IsLocallyControlled())
-	{
-		// PlayerState 리플리케이션이 늦을 경우 InputComponent가 먼저 생생하는 상황 대비하여 초기화
-		// 보통은 PlayerInputComponent가 먼저 생성되므로 InputComponent가 nullptr
-		FindComponentByClass<UPNPlayerInputComponent>()->InitializePlayerInput(InputComponent);
-	}
 }
 
 void APNCharacterPlayer::MoveByInput(const FVector2D MovementVector)

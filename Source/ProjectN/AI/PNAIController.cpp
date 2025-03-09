@@ -5,17 +5,18 @@
 
 #include "PNAI.h"
 #include "BehaviorTree/BlackboardComponent.h"
-#include "Component/PNEquipmentComponent.h"
+#include "Component/PNDetectComponent.h"
 #include "DataTable/AIDataTable.h"
 #include "DataTable/MonsterDataTable.h"
 #include "Subsystem/PNGameDataSubsystem.h"
 
-void APNAIController::OnDetectedEnemy(const AActor* Enemy)
+void APNAIController::OnDetectedEnemy()
 {
 	if (Blackboard)
 	{
 		// 엔진 API의 non-const 필요로 const_cast를 강제로 사용
-		Blackboard->SetValueAsObject(BBKEY_ENEMY, const_cast<AActor*>(Enemy));
+		UPNDetectComponent* DetectComponent = GetPawn()->FindComponentByClass<UPNDetectComponent>();
+		Blackboard->SetValueAsObject(BBKEY_ENEMY, DetectComponent->GetTargetedEnemy());
 	}
 }
 
@@ -41,7 +42,10 @@ void APNAIController::OnPossess(APawn* InPawn)
 				}
 			}
 		}
-		
-		GetPawn()->FindComponentByClass<UPNEquipmentComponent>()->RequestEquip(MonsterDataTable->GetWeaponItemKey());
+	}
+
+	if (UPNDetectComponent* DetectComponent = GetPawn()->FindComponentByClass<UPNDetectComponent>())
+	{
+		DetectComponent->OnDetectedDelegate.AddUObject(this, &ThisClass::OnDetectedEnemy);
 	}
 }

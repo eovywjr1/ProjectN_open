@@ -35,6 +35,7 @@ private:
 	UPNActorExtensionComponent(const FObjectInitializer& ObjectInitializer);
 	
 	virtual void InitializeComponent() override final;
+	virtual void BeginPlay() override final;
 	
 public:
 	EActorType ActorType = EActorType::MAX;

@@ -31,9 +31,6 @@ private:
 	
 	void DetectInteractableActor() const;
 	
-	UFUNCTION(Client, Reliable)
-	void ClientDetectInteractableActor(AActor* DetectActor, FName InteractionDataTableKey) const;
-	
 	UFUNCTION()
 	void OnSeePawn(APawn* Pawn);
 	

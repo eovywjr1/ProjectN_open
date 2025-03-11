@@ -15,8 +15,9 @@ class PROJECTN_API UPNInteractionComponent : public UActorComponent
 
 public:
 	bool CanInteraction() const;
-	FName GetInteractionKey();
+	FName GetInteractionDataTableKey() const;
 	
+	void OnDetectInteractableActors(TArray<AActor*>& SortedDetectedActors) const;
 	void RequestInteraction(const FObjectKey InteractionTargetActorKey, const FName InteractionKey);
 	
 	UFUNCTION(Server, Reliable)
@@ -26,4 +27,7 @@ public:
 	
 private:
 	UPNInteractionComponent();
+	
+	UFUNCTION(Client, Reliable)
+	void ClientDetectInteractableActor(AActor* DetectActor) const;
 };

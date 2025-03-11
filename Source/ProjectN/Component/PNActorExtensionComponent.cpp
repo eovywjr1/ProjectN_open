@@ -3,12 +3,12 @@
 
 #include "PNActorExtensionComponent.h"
 
+#include "PNAbilitySystemUserInterface.h"
 #include "PNActorGameData.h"
 #include "PNCommonModule.h"
 #include "AbilitySystem/PNAbilitySet.h"
 #include "AbilitySystem/PNAbilitySystemComponent.h"
 #include "Engine/AssetManager.h"
-#include "Interface/PNAbilitySystemInterface.h"
 
 UPNActorExtensionComponent::UPNActorExtensionComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -31,10 +31,7 @@ UPNAbilitySystemComponent* UPNActorExtensionComponent::GetAbilitySystemComponent
 
 void UPNActorExtensionComponent::InitializeAbilitySystem(UPNAbilitySystemComponent* InAbilitySystemComponent, AActor* InOwnerActor)
 {
-	if (AbilitySystemComponent)
-	{
-		return;
-	}
+	check(AbilitySystemComponent == nullptr);
 
 	if (InAbilitySystemComponent == nullptr)
 	{
@@ -64,9 +61,12 @@ void UPNActorExtensionComponent::InitializeAbilitySystem(UPNAbilitySystemCompone
 			}
 		}
 	}
-	
-	IPNAbilitySystemInterface* AbilitySystemInterface = GetOwner<IPNAbilitySystemInterface>();
-	AbilitySystemInterface->OnInitializeAbilitySystemDelegate.Broadcast();
+
+	TArray<UActorComponent*> AbilitySystemUserComponents = GetOwner()->GetComponentsByInterface(UPNAbilitySystemUserInterface::StaticClass());
+	for (UActorComponent* Component : AbilitySystemUserComponents)
+	{
+		Cast<IPNAbilitySystemUserInterface>(Component)->OnInitializeAbilitySystem(AbilitySystemComponent);
+	}
 }
 
 void UPNActorExtensionComponent::InitializeComponent()
@@ -105,11 +105,6 @@ void UPNActorExtensionComponent::InitializeComponent()
 		ActorGameData = Cast<UPNActorGameData>(AssetPtr.Get());
 		check(ActorGameData);
 	}
-}
-
-void UPNActorExtensionComponent::BeginPlay()
-{
-	Super::BeginPlay();
 	
 	if (IsServerActor(GetOwner()) && ActorType < EActorType::Player)
 	{

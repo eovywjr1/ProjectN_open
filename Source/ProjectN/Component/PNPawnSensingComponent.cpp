@@ -124,14 +124,12 @@ bool UPNPawnSensingComponent::CouldSeePawn(const APawn* Other, bool bMaySkipChec
 	const FVector TargetLocation = Other->GetActorLocation();
 	FVector StartLocation = OwnerPawnLocation;
 	FVector SelfForwardVector = Owner->GetActorForwardVector();
-	float DetectAngle = DefaultDetectAngle;
 
 	if (Owner->IsPlayerControlled())
 	{
 		const APlayerCameraManager* CameraManager = Cast<APlayerController>(Owner->GetController())->PlayerCameraManager;
 		StartLocation = CameraManager->GetCameraLocation();
 		SelfForwardVector = CameraManager->GetActorForwardVector();
-		DetectAngle = CameraManager->GetFOVAngle();
 	}
 
 	const FTransform ComponentTransform = CapsuleComponent->GetComponentTransform();
@@ -149,9 +147,6 @@ bool UPNPawnSensingComponent::CouldSeePawn(const APawn* Other, bool bMaySkipChec
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(Owner);
 
-	const float DetectRadian = FMath::DegreesToRadians(DetectAngle);
-	const float CosHalfDetectRadian = FMath::Cos(DetectRadian * 0.5f);
-
 	FThreadSafeCounter TotalPointCounter(0);
 	FThreadSafeCounter VisiblePointCounter(0);
 
@@ -162,7 +157,7 @@ bool UPNPawnSensingComponent::CouldSeePawn(const APawn* Other, bool bMaySkipChec
 #endif
 
 	ParallelFor(TotalGridPoints,
-	            [this, SelfForwardVector, ScaledHalfHeight, ScaledRadius, BoxHeight, BoxWidth, RightVector, UpVector, &ComponentTransform, StartLocation, CosHalfDetectRadian, &TotalPointCounter, &VisiblePointCounter, &QueryParams
+	            [this, SelfForwardVector, ScaledHalfHeight, ScaledRadius, BoxHeight, BoxWidth, RightVector, UpVector, &ComponentTransform, StartLocation, &TotalPointCounter, &VisiblePointCounter, &QueryParams
 #ifdef ENABLE_DRAW_DEBUG
 		          , &CheckPointHits, &CheckPointHitsCriticalSection
 #endif
@@ -181,7 +176,7 @@ bool UPNPawnSensingComponent::CouldSeePawn(const APawn* Other, bool bMaySkipChec
 
 		            const FVector DirectionSelfToPoint = (Point - StartLocation).GetSafeNormal();
 		            const float CosAngleSelfToPoint = FVector::DotProduct(SelfForwardVector, DirectionSelfToPoint);
-		            if (CosAngleSelfToPoint < CosHalfDetectRadian)
+		            if (CosAngleSelfToPoint < PeripheralVisionCosine)
 		            {
 			            return;
 		            }

@@ -163,28 +163,16 @@ void UPNStatusActorComponent::ApplyAttackDamage(AActor* SourceActor)
 
 UPNStatusActorComponent::UPNStatusActorComponent()
 {
-	bWantsInitializeComponent = true;
 	SetIsReplicatedByDefault(true);
 }
 
-void UPNStatusActorComponent::InitializeComponent()
-{
-	Super::InitializeComponent();
-
-	if (IPNAbilitySystemInterface* AbilitySystemInterface = GetOwner<IPNAbilitySystemInterface>())
-	{
-		AbilitySystemInterface->OnInitializeAbilitySystemDelegate.AddUObject(this, &ThisClass::OnInitializeAbilitySystem);
-	}
-}
-
-void UPNStatusActorComponent::OnInitializeAbilitySystem()
+void UPNStatusActorComponent::OnInitializeAbilitySystem(UPNAbilitySystemComponent* AbilitySystemComponent)
 {
 	AActor* Owner = GetOwner();
 
 	if (IsServerActor(Owner))
 	{
 		APNCharacter* OwnerCast = Cast<APNCharacter>(Owner);
-		UPNAbilitySystemComponent* AbilitySystemComponent = GetOwner<IPNAbilitySystemInterface>()->GetPNAbilitySystemComponent();
 
 		// Todo. 데이터테이블과 연동해야 함	
 		if (OwnerCast && OwnerCast->GetController() && OwnerCast->GetController()->IsPlayerController())

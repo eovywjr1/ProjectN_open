@@ -6,6 +6,7 @@
 #include "AttributeSet.h"
 #include "ActiveGameplayEffectHandle.h"
 #include "GameplayTagContainer.h"
+#include "PNAbilitySystemUserInterface.h"
 #include "Components/ActorComponent.h"
 #include "PNStatusActorComponent.generated.h"
 
@@ -17,7 +18,7 @@ enum class EEquipSlotType : uint8;
 struct FEquipmentDataTable;
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class PROJECTN_API UPNStatusActorComponent : public UActorComponent
+class PROJECTN_API UPNStatusActorComponent : public UActorComponent, public IPNAbilitySystemUserInterface
 {
 	GENERATED_BODY()
 
@@ -34,9 +35,7 @@ public:
 	
 private:
 	UPNStatusActorComponent();
-	virtual void InitializeComponent() override final;
-	
-	void OnInitializeAbilitySystem();
+	virtual void OnInitializeAbilitySystem(UPNAbilitySystemComponent* AbilitySystemComponent) override final;
 	
 	FGameplayAttribute GetStatusAttribute(const EStatusType StatusType) const;
 	EStatusType GetStatusType(const FGameplayAttribute Attribute) const;

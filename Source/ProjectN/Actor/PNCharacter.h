@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Component/PNActorComponentCreatorInterface.h"
 #include "GameFramework/Character.h"
 #include "Interface/PNAbilitySystemInterface.h"
 #include "PNCharacter.generated.h"
@@ -10,7 +11,7 @@
 class UPNActorExtensionComponent;
 
 UCLASS(config=Game)
-class APNCharacter : public ACharacter, public IPNAbilitySystemInterface
+class APNCharacter : public ACharacter, public IPNAbilitySystemInterface, public IPNActorComponentCreatorInterface
 {
 	GENERATED_BODY()
 

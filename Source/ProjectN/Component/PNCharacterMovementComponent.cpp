@@ -17,16 +17,6 @@ bool UPNCharacterMovementComponent::IsIdle() const
 	return true;
 }
 
-void UPNCharacterMovementComponent::InitializeComponent()
-{
-	Super::InitializeComponent();
-	
-	if (IPNAbilitySystemInterface* AbilitySystemInterface = GetOwner<IPNAbilitySystemInterface>())
-	{
-		AbilitySystemInterface->OnInitializeAbilitySystemDelegate.AddUObject(this, &ThisClass::OnInitializeAbilitySystem);
-	}
-}
-
 void UPNCharacterMovementComponent::OnMovementUpdated(float DeltaSeconds, const FVector& OldLocation, const FVector& OldVelocity)
 {
 	if (IPNAbilitySystemInterface* OwnerAbilitySystemInterface = Cast<IPNAbilitySystemInterface>(GetOwner()))
@@ -66,11 +56,8 @@ void UPNCharacterMovementComponent::OnUpdateTag(const FGameplayTag GameplayTag, 
 	}
 }
 
-void UPNCharacterMovementComponent::OnInitializeAbilitySystem()
+void UPNCharacterMovementComponent::OnInitializeAbilitySystem(UPNAbilitySystemComponent* AbilitySystemComponent)
 {
-	IPNAbilitySystemInterface* OwnerAbilitySystemInterface = Cast<IPNAbilitySystemInterface>(GetOwner());
-	UAbilitySystemComponent* AbilitySystemComponent = OwnerAbilitySystemInterface->GetAbilitySystemComponent();
-
 	AbilitySystemComponent->AddLooseGameplayTag(FPNGameplayTags::Get().Action_Idle);
 	OnActionTagDelegateHandle = AbilitySystemComponent->RegisterGenericGameplayTagEvent().AddUObject(this, &ThisClass::OnUpdateTag);
 }

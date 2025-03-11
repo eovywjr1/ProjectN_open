@@ -8,8 +8,6 @@
 #include "UObject/Interface.h"
 #include "PNAbilitySystemInterface.generated.h"
 
-DECLARE_MULTICAST_DELEGATE(FOnInitializeAbilitySystemDelegate)
-
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
 class UPNAbilitySystemInterface : public UAbilitySystemInterface
@@ -32,6 +30,4 @@ public:
 
 		return AbilitySystemComponent;
 	}
-
-	FOnInitializeAbilitySystemDelegate OnInitializeAbilitySystemDelegate;
 };

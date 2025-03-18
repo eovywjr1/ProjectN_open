@@ -3,10 +3,13 @@
 
 #include "Component/PNSkillComponent.h"
 
+#include "PNEquipmentComponent.h"
 #include "PNGameplayTags.h"
 #include "AbilitySystem/PNAbilitySystemComponent.h"
 #include "AbilitySystem/AttributeSet/PNPlayerAttributeSet.h"
 #include "AbilitySystem/AttributeSet/PNWeaponAttributeSet.h"
+#include "DataTable/EquipmentDataTable.h"
+#include "DataTable/ItemDataTable.h"
 #include "DataTable/SkillDataTable.h"
 #include "Interface/PNAbilitySystemInterface.h"
 #include "Subsystem/PNGameDataSubsystem.h"
@@ -122,7 +125,7 @@ void UPNSkillComponent::ServerPostSkillProcess_Implementation(const bool bHit)
 
 bool UPNSkillComponent::IsEnableSkill(const FGameplayTag InputTag) const
 {
-	if (!InputTag.IsValid())
+	if (!InputTag.IsValid() || RootComboNode == nullptr)
 	{
 		return false;
 	}
@@ -170,12 +173,7 @@ bool UPNSkillComponent::IsEnableSkill(const FGameplayTag InputTag) const
 UPNSkillComponent::UPNSkillComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
-	bWantsInitializeComponent = true;
-
 	SetIsReplicatedByDefault(true);
-
-	RootComboNode = CreateNode(nullptr);
-	CurrentComboNode = RootComboNode;
 }
 
 void UPNSkillComponent::OnEquipWeapon()
@@ -185,10 +183,38 @@ void UPNSkillComponent::OnEquipWeapon()
 
 void UPNSkillComponent::InitComboTree()
 {
-	check(RootComboNode.IsValid());
+	ComboNodes.Empty();
 
-	const UPNWeaponAttributeSet* WeaponAttributeSet = GetOwner<IPNAbilitySystemInterface>()->GetAbilitySystemComponent()->GetSet<UPNWeaponAttributeSet>();
-	check(WeaponAttributeSet);
+	RootComboNode = CreateNode(nullptr);
+	CurrentComboNode = RootComboNode;
+	
+	// Todo. 임시, 콤보를 데이터테이블에서 가져오도록 변경해야 함
+	FName EquipItemDataTableIndex = GetOwner()->FindComponentByClass<UPNEquipmentComponent>()->GetEquipItemDataTableIndex(EEquipSlotType::Weapon);
+	if(EquipItemDataTableIndex == NAME_None)
+	{
+		return;
+	}
+	
+	const FItemDataTable* ItemDataTable = UPNGameDataSubsystem::Get(GetWorld())->GetData<FItemDataTable>(EquipItemDataTableIndex);
+	if (ItemDataTable == nullptr)
+	{
+		return;
+	}
+
+	const FEquipmentDataTable* EquipmentDataTable = UPNGameDataSubsystem::Get(GetWorld())->GetData<FEquipmentDataTable>(ItemDataTable->GetEquipmentKey());
+	if (EquipmentDataTable == nullptr)
+	{
+		return;
+	}
+	
+	UClass* WeaponAttributeSetClass = EquipmentDataTable->GetWeaponAttributeSetClass();
+	if(WeaponAttributeSetClass == nullptr)
+	{
+		return;
+	}
+	
+	UPNWeaponAttributeSet* WeaponAttributeSet = NewObject<UPNWeaponAttributeSet>(this, WeaponAttributeSetClass);
+	/////////////////////////////////
 
 	for (TArray<FComboData>::TConstIterator Iter = WeaponAttributeSet->GetComboDatas(); Iter; ++Iter)
 	{

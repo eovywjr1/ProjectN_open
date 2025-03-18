@@ -1,16 +1,14 @@
-
 #include "EquipmentDataTable.h"
 
 #include "AbilitySystem/AttributeSet/PNAttributeSet.h"
 #include "Engine/AssetManager.h"
 
-UPNAttributeSet* FEquipmentDataTable::GetWeaponAttributeSet() const
+UClass* FEquipmentDataTable::GetWeaponAttributeSetClass() const
 {
-	return Cast<UPNAttributeSet>(WeaponAttributeSetPath.ResolveObject());
+	return WeaponAttributeSetPath.ResolveClass();
 }
 
 void FEquipmentDataTable::PostLoadDataTable()
 {
-	TArray<FSoftObjectPath> LoadAssets{WeaponAttributeSetPath};
-	UAssetManager::GetStreamableManager().RequestAsyncLoad(LoadAssets);
+	UAssetManager::GetStreamableManager().RequestAsyncLoad(WeaponAttributeSetPath);
 }

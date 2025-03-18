@@ -25,8 +25,7 @@ struct FEquipmentDataTable : public FPNDataTable
 public:
 	FORCEINLINE EEquipSlotType GetEquipSlotType() const { return EquipSlotType; }
 	const TArray<FName> GetStatusKeys() const { return StatusKeys; }
-	UPNAttributeSet* GetWeaponAttributeSet() const;
-	
+	UClass* GetWeaponAttributeSetClass() const;
 	
 private:
 	virtual void PostLoadDataTable() override final;
@@ -39,5 +38,5 @@ private:
 	TArray<FName> StatusKeys;
 	
 	UPROPERTY(EditDefaultsOnly)
-	FSoftObjectPath WeaponAttributeSetPath;
+	FSoftClassPath WeaponAttributeSetPath;
 };

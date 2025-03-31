@@ -31,6 +31,8 @@ public:
 	UPNAbilitySystemComponent* GetAbilitySystemComponent() const;
 	void InitializeAbilitySystem(UPNAbilitySystemComponent* InAbilitySystemComponent, AActor* InOwnerActor);
 	
+	bool IsPlayerActor() const { return ActorType == EActorType::Player; }
+	
 private:
 	UPNActorExtensionComponent(const FObjectInitializer& ObjectInitializer);
 	

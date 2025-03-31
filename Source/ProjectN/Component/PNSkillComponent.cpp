@@ -26,19 +26,25 @@ void UPNSkillComponent::ClearCombo()
 	}
 }
 
-const FAttackData* UPNSkillComponent::ExecuteNextCombo(const FGameplayTag NextAttackTag)
+const FAttackData* UPNSkillComponent::RequestNextCombo(const FGameplayTag NextAttackTag)
 {
 	check(CurrentComboNode.IsValid());
-
+	
 	if (!IsEnableNextCombo(NextAttackTag))
 	{
 		return nullptr;
 	}
-
-	TWeakPtr<FComboNode>* NextComboNode = CurrentComboNode.Pin()->Children.Find(NextAttackTag);
-	CurrentComboNode = *NextComboNode;
-
+	
 	if (!HasAuthority())
+	{
+		const bool bExecuteNextCombo = TryNextCombo(NextAttackTag);
+		if (!bExecuteNextCombo)
+		{
+			return nullptr;
+		}
+	}
+
+	if (IsClientActor(GetOwner()))
 	{
 		ServerExecuteNextCombo(NextAttackTag);
 	}
@@ -53,13 +59,14 @@ void UPNSkillComponent::ServerClearCombo_Implementation()
 
 void UPNSkillComponent::ServerExecuteNextCombo_Implementation(const FGameplayTag NextAttackTag)
 {
-	const FAttackData* CurrentComboData = ExecuteNextCombo(NextAttackTag);
-	if (CurrentComboData == nullptr)
+	const bool bExecuteNextCombo = TryNextCombo(NextAttackTag);
+	if (!bExecuteNextCombo)
 	{
 		return;
 	}
-
-	if (!CurrentComboData->SkillDataTableIndex.IsNone())
+	
+	const FAttackData* CurrentComboData = CurrentComboNode.Pin()->ComboData;
+	if (CurrentComboData && !CurrentComboData->SkillDataTableIndex.IsNone())
 	{
 		UGameplayEffect* SkillEffect = NewObject<UGameplayEffect>(this, FName(TEXT("SkillEffect")));
 		SkillEffect->DurationPolicy = EGameplayEffectDurationType::Instant;
@@ -187,14 +194,14 @@ void UPNSkillComponent::InitComboTree()
 
 	RootComboNode = CreateNode(nullptr);
 	CurrentComboNode = RootComboNode;
-	
+
 	// Todo. 임시, 콤보를 데이터테이블에서 가져오도록 변경해야 함
 	FName EquipItemDataTableIndex = GetOwner()->FindComponentByClass<UPNEquipmentComponent>()->GetEquipItemDataTableIndex(EEquipSlotType::Weapon);
-	if(EquipItemDataTableIndex == NAME_None)
+	if (EquipItemDataTableIndex == NAME_None)
 	{
 		return;
 	}
-	
+
 	const FItemDataTable* ItemDataTable = UPNGameDataSubsystem::Get(GetWorld())->GetData<FItemDataTable>(EquipItemDataTableIndex);
 	if (ItemDataTable == nullptr)
 	{
@@ -206,13 +213,13 @@ void UPNSkillComponent::InitComboTree()
 	{
 		return;
 	}
-	
+
 	UClass* WeaponAttributeSetClass = EquipmentDataTable->GetWeaponAttributeSetClass();
-	if(WeaponAttributeSetClass == nullptr)
+	if (WeaponAttributeSetClass == nullptr)
 	{
 		return;
 	}
-	
+
 	UPNWeaponAttributeSet* WeaponAttributeSet = NewObject<UPNWeaponAttributeSet>(this, WeaponAttributeSetClass);
 	/////////////////////////////////
 
@@ -261,6 +268,19 @@ bool UPNSkillComponent::IsEnableAttack(const FAttackData* AttackData) const
 			}
 		}
 	}
+
+	return true;
+}
+
+bool UPNSkillComponent::TryNextCombo(const FGameplayTag NextAttackTag)
+{
+	if (!IsEnableNextCombo(NextAttackTag))
+	{
+		return false;
+	}
+
+	TWeakPtr<FComboNode>* NextComboNode = CurrentComboNode.Pin()->Children.Find(NextAttackTag);
+	CurrentComboNode = *NextComboNode;
 
 	return true;
 }

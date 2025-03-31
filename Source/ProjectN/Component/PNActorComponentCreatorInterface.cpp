@@ -32,14 +32,20 @@ void IPNActorComponentCreatorInterface::CreateActorComponent(EActorType ActorTyp
 			UPNSkillComponent* SkillComponent = NewObject<UPNSkillComponent>(SelfActor, TEXT("SkillComponent"));
 			SkillComponent->RegisterComponent();
 
-			UPNDetectComponent* DetectComponent = NewObject<UPNDetectComponent>(SelfActor, TEXT("DetectComponent"));
-			DetectComponent->RegisterComponent();
-
 			UPNStatusActorComponent* StatusComponent = NewObject<UPNStatusActorComponent>(SelfActor, TEXT("StatusComponent"));
 			StatusComponent->RegisterComponent();
+		}
 
-			UPNPawnSensingComponent* SensingComponent = NewObject<UPNPawnSensingComponent>(SelfActor, TEXT("SensingComponent"));
-			SensingComponent->RegisterComponent();
+		UPNPawnSensingComponent* SensingComponent = NewObject<UPNPawnSensingComponent>(SelfActor, TEXT("SensingComponent"));
+		SensingComponent->RegisterComponent();
+	}
+
+	if (ActorType == EActorType::Monster)
+	{
+		if (IsServerActor(SelfActor))
+		{
+			UPNDetectComponent* DetectComponent = NewObject<UPNDetectComponent>(SelfActor, TEXT("DetectComponent"));
+			DetectComponent->RegisterComponent();
 		}
 	}
 
@@ -58,6 +64,9 @@ void IPNActorComponentCreatorInterface::CreateActorComponent(EActorType ActorTyp
 		{
 			UPNPlayerInputComponent* PNPlayerInputComponent = NewObject<UPNPlayerInputComponent>(SelfActor, TEXT("PlayerInputComponent"));
 			PNPlayerInputComponent->RegisterComponent();
+			
+			UPNDetectComponent* DetectComponent = NewObject<UPNDetectComponent>(SelfActor, TEXT("DetectComponent"));
+			DetectComponent->RegisterComponent();
 		}
 	}
 }

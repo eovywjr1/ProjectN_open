@@ -35,6 +35,7 @@ private:
 	// 청각 감지를 하지 않고, CouldSeePawn에서 콜라이더 탐지 비율을 체크하므로 HasLineOfSightTo가 필요 없기 때문에 SensePawn를 override
 	virtual void SensePawn(APawn& Pawn) override final;
 	virtual bool ShouldCheckVisibilityOf(APawn* Pawn) const override final;
+	virtual void SetTimer(const float TimeDelay) override final;
 	
 private:
 	bool bOnlySenseMonster = false;

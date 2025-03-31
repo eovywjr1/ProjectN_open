@@ -3,6 +3,7 @@
 
 #include "Component/PNPawnSensingComponent.h"
 
+#include "PNActorExtensionComponent.h"
 #include "PNCommonModule.h"
 #include "PNPercent.h"
 #include "PNStatusActorComponent.h"
@@ -37,8 +38,8 @@ void UPNPawnSensingComponent::ConvertSenseType(const ESenseType InDetectType)
 
 UPNPawnSensingComponent::UPNPawnSensingComponent()
 {
-	bWantsInitializeComponent = true;	
-	
+	bWantsInitializeComponent = true;
+
 	SightRadius = DefaultSightRadius;
 	bOnlySensePlayers = true;
 }
@@ -46,7 +47,7 @@ UPNPawnSensingComponent::UPNPawnSensingComponent()
 void UPNPawnSensingComponent::InitializeComponent()
 {
 	Super::InitializeComponent();
-	
+
 	SetPeripheralVisionAngle(DefaultDetectAngle);
 }
 
@@ -87,6 +88,25 @@ bool UPNPawnSensingComponent::ShouldCheckVisibilityOf(APawn* Pawn) const
 	}
 
 	return true;
+}
+
+void UPNPawnSensingComponent::SetTimer(const float TimeDelay)
+{
+	APawn* Owner = GetOwner<APawn>();
+	const UPNActorExtensionComponent* ActorExtensionComponent = Owner->FindComponentByClass<UPNActorExtensionComponent>();
+	
+	// 플레이어는 서버에서 적을 탐지할 필요가 없기 때문에 클라이언트에서 탐지
+	if (ActorExtensionComponent->IsPlayerActor())
+	{
+		if (IsClientActor(Owner))
+		{
+			Owner->GetWorldTimerManager().SetTimer(TimerHandle_OnTimer, this, &UPNPawnSensingComponent::OnTimer, TimeDelay, false);
+		}
+	}
+	else
+	{
+		Super::SetTimer(TimeDelay);
+	}
 }
 
 bool UPNPawnSensingComponent::CouldSeePawn(const APawn* Other, bool bMaySkipChecks) const
@@ -212,6 +232,6 @@ void UPNPawnSensingComponent::SetPlayerSensor(const float InCameraFOVAngle)
 {
 	bOnlySensePlayers = false;
 	bOnlySenseMonster = true;
-	
+
 	SetPeripheralVisionAngle(InCameraFOVAngle);
 }

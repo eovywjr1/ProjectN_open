@@ -198,8 +198,11 @@ void UPNStatusActorComponent::OnInitializeAbilitySystem(UPNAbilitySystemComponen
 
 		AbilitySystemComponent->RegisterGameplayTagEvent(FPNGameplayTags::Get().Action_Attack, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &ThisClass::OnActionTagChanged);
 		AbilitySystemComponent->RegisterGameplayTagEvent(FPNGameplayTags::Get().Action_Guard, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &ThisClass::OnActionTagChanged);
+	}
 
-		Owner->FindComponentByClass<UPNDetectComponent>()->OnDetectedDelegate.AddUObject(this, &ThisClass::OnDetected);
+	if (UPNDetectComponent* DetectComponent = Owner->FindComponentByClass<UPNDetectComponent>())
+	{
+		DetectComponent->OnDetectedDelegate.AddUObject(this, &ThisClass::OnDetected);
 	}
 }
 
@@ -268,8 +271,8 @@ void UPNStatusActorComponent::SetPeaceOrFightStatus(const FGameplayTag StatusTag
 		UPNAbilitySystemComponent* AbilitySystemComponent = OwnerAbilitySystemInterface->GetPNAbilitySystemComponent();
 		const FGameplayTag InverseStatusTag = StatusTag.MatchesTag(FPNGameplayTags::Get().Status_Peace) ? FPNGameplayTags::Get().Status_Fight : FPNGameplayTags::Get().Status_Peace;
 
-		AbilitySystemComponent->SetAndReplicateGameplayTagCount(InverseStatusTag, 0);
-		AbilitySystemComponent->SetAndReplicateGameplayTagCount(StatusTag, 1);
+		AbilitySystemComponent->SetLooseGameplayTagCount(InverseStatusTag, 0);
+		AbilitySystemComponent->SetLooseGameplayTagCount(StatusTag, 1);
 	}
 
 	if (StatusTag.MatchesTag(FPNGameplayTags::Get().Status_Fight) && CheckTransitionToPeaceTimerHandle.IsValid() == false)

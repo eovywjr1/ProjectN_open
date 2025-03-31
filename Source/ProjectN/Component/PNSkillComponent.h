@@ -35,7 +35,7 @@ public:
 	FORCEINLINE void ClearCombo();
 	bool IsEnableNextCombo(const FGameplayTag NextAttackTag) const;
 	FORCEINLINE bool IsCurrentCombo(const FGameplayTag AttackTag);
-	const FAttackData* ExecuteNextCombo(const FGameplayTag NextAttackTag);
+	const FAttackData* RequestNextCombo(const FGameplayTag NextAttackTag);
 	
 	UFUNCTION(Server, Reliable)
 	void ServerClearCombo();
@@ -55,6 +55,7 @@ private:
 	void InitComboTree();	
 	
 	bool IsEnableAttack(const FAttackData* AttackData) const;
+	bool TryNextCombo(const FGameplayTag NextAttackTag);
 
 private:
 	// 콤보에는 공격과 스킬이 모두 포함되어 있음

@@ -73,38 +73,38 @@ void UPNPlayerInputComponent::EnableControlInput(bool bEnable) const
 void UPNPlayerInputComponent::InitializeComponent()
 {
 	Super::InitializeComponent();
-	
+
 	const UAssetManager& AssetManager = UAssetManager::Get();
-	
+
 	{
 		FSoftObjectPtr AssetPtr(AssetManager.GetPrimaryAssetPath(FPrimaryAssetId(FName(TEXT("PlayerInput")), FName(TEXT("IMC_Control")))));
-		if(AssetPtr.IsPending())
+		if (AssetPtr.IsPending())
 		{
 			AssetPtr.LoadSynchronous();
 		}
-		
+
 		ControlMappingContext = Cast<UInputMappingContext>(AssetPtr.Get());
 		check(ControlMappingContext);
 	}
-	
+
 	{
 		FSoftObjectPtr AssetPtr(AssetManager.GetPrimaryAssetPath(FPrimaryAssetId(FName(TEXT("PlayerInput")), FName(TEXT("IMC_Camera")))));
-		if(AssetPtr.IsPending())
+		if (AssetPtr.IsPending())
 		{
 			AssetPtr.LoadSynchronous();
 		}
-		
+
 		CameraMappingContext = Cast<UInputMappingContext>(AssetPtr.Get());
 		check(CameraMappingContext);
 	}
-	
+
 	{
 		FSoftObjectPtr AssetPtr(AssetManager.GetPrimaryAssetPath(FPrimaryAssetId(FName(TEXT("PlayerInput")), FName(TEXT("DA_PlayerInputConfig")))));
-		if(AssetPtr.IsPending())
+		if (AssetPtr.IsPending())
 		{
 			AssetPtr.LoadSynchronous();
 		}
-		
+
 		InputConfig = Cast<UPNInputConfig>(AssetPtr.Get());
 		check(InputConfig);
 	}
@@ -132,21 +132,14 @@ void UPNPlayerInputComponent::Input_NextLockOnTarget(const FInputActionValue& In
 		return;
 	}
 
-	GetController<APNPlayerController>()->ServerSetNextPriorityLockOnTargetActor();
+	GetController<APNPlayerController>()->SetNextPriorityLockOnTargetActor();
 }
 
 void UPNPlayerInputComponent::Input_LockOn(const FInputActionValue& InputActionValue)
 {
 	bIsActivatedLockOn = !bIsActivatedLockOn;
 
-	if (bIsActivatedLockOn)
-	{
-		GetController<APNPlayerController>()->ActivateLockOn();
-	}
-	else
-	{
-		GetController<APNPlayerController>()->DeActivateLockOn();
-	}
+	GetController<APNPlayerController>()->ActivateLockOn(bIsActivatedLockOn);
 }
 
 void UPNPlayerInputComponent::Input_AbilityPressed(FGameplayTag InputTag)

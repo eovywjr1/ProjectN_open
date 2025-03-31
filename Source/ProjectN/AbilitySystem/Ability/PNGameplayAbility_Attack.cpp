@@ -146,7 +146,7 @@ void UPNGameplayAbility_Attack::ExecuteAttack()
 
 	if (UPNSkillComponent* SkillComponent = GetAvatarActorFromActorInfo()->FindComponentByClass<UPNSkillComponent>())
 	{
-		AttackData = SkillComponent->ExecuteNextCombo(AttackTag);
+		AttackData = SkillComponent->RequestNextCombo(AttackTag);
 		if (AttackData == nullptr)
 		{
 			return;

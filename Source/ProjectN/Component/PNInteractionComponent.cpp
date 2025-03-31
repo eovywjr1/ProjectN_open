@@ -5,7 +5,6 @@
 
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemInterface.h"
-#include "PNCommonModule.h"
 #include "PNGameplayTags.h"
 #include "DataTable/InteractionDataTable.h"
 #include "Subsystem/PNGameDataSubsystem.h"
@@ -13,10 +12,12 @@
 
 bool UPNInteractionComponent::CanInteraction() const
 {
-	UAbilitySystemComponent* AbilitySystemComponent = GetOwner<IAbilitySystemInterface>()->GetAbilitySystemComponent();
-	if (AbilitySystemComponent->GetGameplayTagCount(FPNGameplayTags::Get().State_DisableInteraction) > 0)
+	if (UAbilitySystemComponent* AbilitySystemComponent = GetOwner<IAbilitySystemInterface>()->GetAbilitySystemComponent())
 	{
-		return false;
+		if (AbilitySystemComponent->GetGameplayTagCount(FPNGameplayTags::Get().State_DisableInteraction) > 0)
+		{
+			return false;
+		}
 	}
 
 	if (GetInteractionDataTableKey() == NAME_None)
@@ -37,9 +38,7 @@ FName UPNInteractionComponent::GetInteractionDataTableKey() const
 
 void UPNInteractionComponent::OnDetectInteractableActors(TArray<AActor*>& SortedDetectedActors) const
 {
-	check(IsServerActor(GetOwner()));
-
-	bool bDetectedInteractableActor = false;
+	AActor* DetectedInteractableActor = nullptr;
 	for (AActor* InteractableActor : SortedDetectedActors)
 	{
 		UPNInteractionComponent* TargetInteractionComponent = InteractableActor->FindComponentByClass<UPNInteractionComponent>();
@@ -50,15 +49,23 @@ void UPNInteractionComponent::OnDetectInteractableActors(TArray<AActor*>& Sorted
 			continue;
 		}
 
-		bDetectedInteractableActor = true;
-		ClientDetectInteractableActor(InteractableActor);
+		DetectedInteractableActor = InteractableActor;
 
 		break;
 	}
-
-	if (!bDetectedInteractableActor)
+	
+	APNHUD* HUD = Cast<APNHUD>(GetOwner<APawn>()->GetController<APlayerController>()->GetHUD());
+	if (DetectedInteractableActor)
 	{
-		ClientDetectInteractableActor(nullptr);
+		const UPNInteractionComponent* TargetInteractionComponent = DetectedInteractableActor->FindComponentByClass<UPNInteractionComponent>();
+		const FName TargetInteractionDataTableKey = TargetInteractionComponent->GetInteractionDataTableKey();
+		check(TargetInteractionComponent->CanInteraction());
+
+		HUD->OnDetectedInteractableActorDelegate.Broadcast(DetectedInteractableActor, TargetInteractionDataTableKey);
+	}
+	else
+	{
+		HUD->OnUnDetectedInteractableActorDelegate.Broadcast();
 	}
 }
 
@@ -81,23 +88,6 @@ void UPNInteractionComponent::TryActivateInteractionAbility(const FGameplayTagCo
 UPNInteractionComponent::UPNInteractionComponent()
 {
 	SetIsReplicatedByDefault(true);
-}
-
-void UPNInteractionComponent::ClientDetectInteractableActor_Implementation(AActor* DetectActor) const
-{
-	APNHUD* HUD = Cast<APNHUD>(GetOwner<APawn>()->GetController<APlayerController>()->GetHUD());
-	if (DetectActor)
-	{
-		const UPNInteractionComponent* TargetInteractionComponent = DetectActor->FindComponentByClass<UPNInteractionComponent>();
-		const FName TargetInteractionDataTableKey = TargetInteractionComponent->GetInteractionDataTableKey();
-		check(TargetInteractionComponent->CanInteraction());
-		
-		HUD->OnDetectedInteractableActorDelegate.Broadcast(DetectActor, TargetInteractionDataTableKey);
-	}
-	else
-	{
-		HUD->OnUnDetectedInteractableActorDelegate.Broadcast();
-	}
 }
 
 void UPNInteractionComponent::ServerProcessInteraction_Implementation(AActor* InteractionTargetActor, const FName InteractionKey)

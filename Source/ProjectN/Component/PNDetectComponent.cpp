@@ -21,53 +21,37 @@ bool UPNDetectComponent::CanDetectEnemy(const APawn* Enemy) const
 	return SensingComponent->CouldSeePawn(Enemy);
 }
 
-bool UPNDetectComponent::IsDetectedEnemy(const APawn* Enemy) const
-{
-	return Enemy && DetectedEnemies.Find(Enemy);
-}
-
 UPNDetectComponent::UPNDetectComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
 	bWantsInitializeComponent = true;
 	PrimaryComponentTick.bCanEverTick = true;
-	SetIsReplicatedByDefault(true);
 }
 
 void UPNDetectComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	APawn* Owner = GetOwner<APawn>();
-	if (IsServerActor(Owner))
+	if (!CanDetectEnemy(TargetedEnemy))
 	{
-		if (!CanDetectEnemy(TargetedEnemy))
-		{
-			SetTargetNextPriorityEnemy();
-		}
+		SetTargetNextPriorityEnemy();
+	}
 
-		if (Owner->IsPlayerControlled())
-		{
-			DetectInteractableActor();
-		}
+	APawn* Owner = GetOwner<APawn>();
+	if (IsClientActor(Owner) && Owner->IsPlayerControlled())
+	{
+		DetectInteractableActor();
 	}
 }
 
-void UPNDetectComponent::InitializeComponent()
+void UPNDetectComponent::BeginPlay()
 {
-	Super::InitializeComponent();
+	Super::BeginPlay();
 
 	if (UPNPawnSensingComponent* SensingComponent = GetOwner()->FindComponentByClass<UPNPawnSensingComponent>())
 	{
 		SensingComponent->OnSeePawn.AddDynamic(this, &ThisClass::OnSeePawn);
 	}
-}
-
-void UPNDetectComponent::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME(ThisClass, TargetedEnemy);
 }
 
 void UPNDetectComponent::SetTargetNextPriorityEnemy()
@@ -107,8 +91,6 @@ void UPNDetectComponent::SetTargetNextPriorityEnemy()
 
 void UPNDetectComponent::SetTargetEnemy(APawn* InDetectedEnemy)
 {
-	check(IsServerActor(GetOwner()));
-
 	if (TargetedEnemy == InDetectedEnemy)
 	{
 		return;
@@ -154,7 +136,7 @@ void UPNDetectComponent::DetectInteractableActor() const
 			DetectedActors.Add(HitResult.GetActor());
 		}
 	}
-	
+
 	OwnerInteractionComponent->OnDetectInteractableActors(DetectedActors);
 }
 

@@ -6,7 +6,6 @@
 #include "PNCheatManager.h"
 #include "Component/PNDetectComponent.h"
 #include "Component/PNPawnSensingComponent.h"
-#include "Net/UnrealNetwork.h"
 #include "UI/PNHUD.h"
 
 constexpr float CheckLockOnTimerPeriod = 1.0f;
@@ -14,20 +13,10 @@ constexpr float ClearLockOnTimerPeriod = 3.0f;
 
 void APNPlayerController::UpdateLockOnCameraRotation()
 {
-	FRotator NewRotation = GetControlRotation();
-	NewRotation.Yaw = (LockOnTargetActor->GetActorLocation() - PlayerCameraManager->GetCameraLocation()).Rotation().Yaw;
-	SetControlRotation(NewRotation);
+	FRotator TargetRotation = GetControlRotation();
+	TargetRotation.Yaw = (LockOnTargetActor->GetActorLocation() - PlayerCameraManager->GetCameraLocation()).Rotation().Yaw;
 
-	if (FMath::Abs(LastRotationYaw - NewRotation.Yaw) > 1.0f)
-	{
-		//ServerUpdateControlRotation(NewRotation);
-		LastRotationYaw = NewRotation.Yaw;
-	}
-}
-
-void APNPlayerController::ServerUpdateControlRotation_Implementation(FRotator Rotation)
-{
-	SetControlRotation(Rotation);
+	SetControlRotation(TargetRotation);
 }
 
 APNPlayerController::APNPlayerController()
@@ -35,8 +24,6 @@ APNPlayerController::APNPlayerController()
 #if UE_WITH_CHEAT_MANAGER
 	CheatClass = UPNCheatManager::StaticClass();
 #endif
-
-	SetReplicates(true);
 }
 
 void APNPlayerController::Tick(float DeltaTime)
@@ -61,17 +48,24 @@ void APNPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 
+	if (IsClientActor(this))
+	{
+		// StandAlone 모드에는 리플리케이트가 되지 않기 때문에 구현
+		if (UPNPawnSensingComponent* SensingComponent = GetPawn()->FindComponentByClass<UPNPawnSensingComponent>())
+		{
+			SensingComponent->SetPlayerSensor(PlayerCameraManager->GetFOVAngle());
+		}
+	}
+}
+
+void APNPlayerController::OnRep_Pawn()
+{
+	Super::OnRep_Pawn();
+
 	if (UPNPawnSensingComponent* SensingComponent = GetPawn()->FindComponentByClass<UPNPawnSensingComponent>())
 	{
 		SensingComponent->SetPlayerSensor(PlayerCameraManager->GetFOVAngle());
 	}
-}
-
-void APNPlayerController::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME(ThisClass, LockOnTargetActor);
 }
 
 bool APNPlayerController::CanCameraInputControl() const
@@ -95,12 +89,7 @@ void APNPlayerController::RotationByInput(const FVector2D LookAxisVector)
 	AddPitchInput(LookAxisVector.Y);
 }
 
-void APNPlayerController::ActivateLockOn()
-{
-	ServerSetActivateLockOn(true);
-}
-
-void APNPlayerController::ServerSetActivateLockOn_Implementation(bool bActivate)
+void APNPlayerController::ActivateLockOn(const bool bActivate)
 {
 	ESenseType SenseType = bActivate ? ESenseType::LockOn : ESenseType::Default;
 	GetPawn()->FindComponentByClass<UPNPawnSensingComponent>()->ConvertSenseType(SenseType);
@@ -113,15 +102,12 @@ void APNPlayerController::ServerSetActivateLockOn_Implementation(bool bActivate)
 	{
 		GetWorld()->GetTimerManager().ClearTimer(CheckLockOnTimerHandle);
 		LockOnTargetActor = nullptr;
+		
+		Cast<APNHUD>(GetHUD())->OnDeactivatedLockOnDelegate.Broadcast();
 	}
 }
 
-void APNPlayerController::DeActivateLockOn()
-{
-	ServerSetActivateLockOn(false);
-}
-
-void APNPlayerController::ServerSetNextPriorityLockOnTargetActor_Implementation()
+void APNPlayerController::SetNextPriorityLockOnTargetActor()
 {
 	GetPawn()->FindComponentByClass<UPNDetectComponent>()->SetTargetNextPriorityEnemy();
 	SetLockOnTarget();
@@ -133,7 +119,7 @@ void APNPlayerController::CheckLockOnTimerCallback()
 	const AActor* TargetDetectedEnemy = GetPawn()->FindComponentByClass<UPNDetectComponent>()->GetTargetedEnemy();
 	if (LockOnTargetActor != TargetDetectedEnemy)
 	{
-		GetWorld()->GetTimerManager().SetTimer(ClearLockOnTargetTimerHandle, [this]() { DeActivateLockOn(); }, ClearLockOnTimerPeriod, false, ClearLockOnTimerPeriod);
+		GetWorld()->GetTimerManager().SetTimer(ClearLockOnTargetTimerHandle, [this]() { ActivateLockOn(false); }, ClearLockOnTimerPeriod, false, ClearLockOnTimerPeriod);
 	}
 }
 
@@ -148,16 +134,9 @@ void APNPlayerController::SetLockOnTarget()
 	{
 		GetWorld()->GetTimerManager().SetTimer(CheckLockOnTimerHandle, this, &ThisClass::CheckLockOnTimerCallback, CheckLockOnTimerPeriod, true, CheckLockOnTimerPeriod);
 	}
-}
 
-void APNPlayerController::OnRep_LockOnTargetActor()
-{
 	if (LockOnTargetActor)
 	{
 		Cast<APNHUD>(GetHUD())->OnSetLockOnTargetDelegate.Broadcast(LockOnTargetActor);
-	}
-	else
-	{
-		Cast<APNHUD>(GetHUD())->OnDeactivatedLockOnDelegate.Broadcast();
 	}
 }

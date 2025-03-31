@@ -10,15 +10,15 @@ void UPNSkillUserWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTi
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
 
-	if (UPNSkillComponent* SkillComponent = GetOwningPlayerPawn()->FindComponentByClass<UPNSkillComponent>())
-	{
-		if (SkillComponent->IsEnableSkill(SkillInputTag))
-		{
-			SkillImage->SetOpacity(1.0f);
-		}
-		else
-		{
-			SkillImage->SetOpacity(0.3f);
-		}
-	}
+	// if (UPNSkillComponent* SkillComponent = GetOwningPlayerPawn()->FindComponentByClass<UPNSkillComponent>())
+	// {
+	// 	if (SkillComponent->IsEnableSkill(SkillInputTag))
+	// 	{
+	// 		SkillImage->SetOpacity(1.0f);
+	// 	}
+	// 	else
+	// 	{
+	// 		SkillImage->SetOpacity(0.3f);
+	// 	}
+	// }
 }

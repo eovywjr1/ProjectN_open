@@ -19,13 +19,11 @@ public:
 	FORCEINLINE APawn* GetTargetedEnemy() const { return TargetedEnemy; }
 	
 	bool CanDetectEnemy(const APawn* Enemy) const;
-	bool IsDetectedEnemy(const APawn* Enemy) const;
 
 private:
 	UPNDetectComponent(const FObjectInitializer& ObjectInitializer);
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction) override final;
-	virtual void InitializeComponent() override final;
-	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override final;
+	virtual void BeginPlay() override final;
 	
 	void SetTargetEnemy(APawn* InDetectedEnemy);
 	
@@ -42,7 +40,5 @@ public:
 private:
 	// 탐지된 적을 추가 횟수가 다음 우선순위 타겟을 정하기 위한 정렬 횟수보다 많다고 판단하여 TSet으로 결정
 	TSet<APawn*> DetectedEnemies;
-	
-	UPROPERTY(Replicated)
 	APawn* TargetedEnemy = nullptr;
 };

@@ -27,7 +27,4 @@ public:
 	
 private:
 	UPNInteractionComponent();
-	
-	UFUNCTION(Client, Reliable)
-	void ClientDetectInteractableActor(AActor* DetectActor) const;
 };

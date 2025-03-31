@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "PNPercent.h"
 #include "GameFramework/PlayerController.h"
 #include "PNPlayerController.generated.h"
 
@@ -20,20 +19,10 @@ public:
 
 	void RotationByInput(const FVector2D LookAxisVector);
 
-	void ActivateLockOn();
-	
-	UFUNCTION(Server, Reliable)
-	void ServerSetActivateLockOn(bool bActivate);
-	
-	void DeActivateLockOn();
-	
-	UFUNCTION(Server, Reliable)
-	void ServerSetNextPriorityLockOnTargetActor();
+	void ActivateLockOn(const bool bActivate);
+	void SetNextPriorityLockOnTargetActor();
 	
 	void UpdateLockOnCameraRotation();
-	
-	UFUNCTION(Server, Unreliable)
-	void ServerUpdateControlRotation(FRotator Rotation);
 
 private:
 	APNPlayerController();
@@ -41,18 +30,14 @@ private:
 	virtual void Tick(float DeltaSeconds) override final;
 	virtual void SetupInputComponent() override final;
 	virtual void OnPossess(APawn* InPawn) override final;
-	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override final;
+	virtual void OnRep_Pawn() override final;
 
 	UFUNCTION()
 	void CheckLockOnTimerCallback();
 	
 	void SetLockOnTarget();
-	
-	UFUNCTION()
-	void OnRep_LockOnTargetActor();
 
 private:
-	UPROPERTY(ReplicatedUsing = OnRep_LockOnTargetActor)
 	APawn* LockOnTargetActor = nullptr;
 
 	FTimerHandle CheckLockOnTimerHandle;

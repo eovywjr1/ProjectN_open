@@ -53,7 +53,7 @@ public:
 	ATTRIBUTE_ACCESSORS(UPNWeaponAttributeSet, WeaponDamage);
 
 	bool GetAttackHitBoxData(FGameplayTag AbilityTag, FHitBoxData& OutAttackHitBoxData) const;
-	FORCEINLINE TArray<FComboData>::TConstIterator GetComboDatas() const { return ComboDatas.CreateConstIterator(); }
+	FORCEINLINE const TArray<FComboData>& GetComboDatas() const { return ComboDatas; }
 
 private:
 	UPROPERTY(EditDefaultsOnly)

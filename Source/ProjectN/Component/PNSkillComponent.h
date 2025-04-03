@@ -52,7 +52,9 @@ private:
 	UPNSkillComponent(const FObjectInitializer& ObjectInitializer);
 
 	TWeakPtr<FComboNode> CreateNode(const FAttackData* InComboData);
-	void InitComboTree();	
+	void InitComboTree();
+	void PlayerInitComboTree();
+	void MonsterInitComboTree();
 	
 	bool IsEnableAttack(const FAttackData* AttackData) const;
 	bool TryNextCombo(const FGameplayTag NextAttackTag);

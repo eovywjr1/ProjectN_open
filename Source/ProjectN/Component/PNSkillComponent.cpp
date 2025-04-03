@@ -3,6 +3,7 @@
 
 #include "Component/PNSkillComponent.h"
 
+#include "PNActorExtensionComponent.h"
 #include "PNEquipmentComponent.h"
 #include "PNGameplayTags.h"
 #include "AbilitySystem/PNAbilitySystemComponent.h"
@@ -195,34 +196,27 @@ void UPNSkillComponent::InitComboTree()
 	RootComboNode = CreateNode(nullptr);
 	CurrentComboNode = RootComboNode;
 
-	// Todo. 임시, 콤보를 데이터테이블에서 가져오도록 변경해야 함
-	FName EquipItemDataTableIndex = GetOwner()->FindComponentByClass<UPNEquipmentComponent>()->GetEquipItemDataTableIndex(EEquipSlotType::Weapon);
-	if (EquipItemDataTableIndex == NAME_None)
+	const UPNActorExtensionComponent* ActorExtensionComponent = GetOwner()->FindComponentByClass<UPNActorExtensionComponent>();
+	if(ActorExtensionComponent->IsPlayerActor())
 	{
-		return;
+		PlayerInitComboTree();
 	}
-
-	const FItemDataTable* ItemDataTable = UPNGameDataSubsystem::Get(GetWorld())->GetData<FItemDataTable>(EquipItemDataTableIndex);
-	if (ItemDataTable == nullptr)
+	else if(ActorExtensionComponent->IsMonsterActor())
 	{
-		return;
+		MonsterInitComboTree();
 	}
+}
 
-	const FEquipmentDataTable* EquipmentDataTable = UPNGameDataSubsystem::Get(GetWorld())->GetData<FEquipmentDataTable>(ItemDataTable->GetEquipmentKey());
-	if (EquipmentDataTable == nullptr)
-	{
-		return;
-	}
-
-	UClass* WeaponAttributeSetClass = EquipmentDataTable->GetWeaponAttributeSetClass();
+void UPNSkillComponent::PlayerInitComboTree()
+{
+	const UPNEquipmentComponent* EquipmentComponent = GetOwner()->FindComponentByClass<UPNEquipmentComponent>();
+	UClass* WeaponAttributeSetClass = EquipmentComponent->GetWeaponAttributeSetClass();
 	if (WeaponAttributeSetClass == nullptr)
 	{
 		return;
 	}
 
 	UPNWeaponAttributeSet* WeaponAttributeSet = NewObject<UPNWeaponAttributeSet>(this, WeaponAttributeSetClass);
-	/////////////////////////////////
-
 	for (TArray<FComboData>::TConstIterator Iter = WeaponAttributeSet->GetComboDatas(); Iter; ++Iter)
 	{
 		FComboNode* CurrentNode = RootComboNode.Pin().Get();
@@ -239,6 +233,11 @@ void UPNSkillComponent::InitComboTree()
 			CurrentNode = ChildComboNode->Pin().Get();
 		}
 	}
+}
+
+void UPNSkillComponent::MonsterInitComboTree()
+{
+
 }
 
 TWeakPtr<FComboNode> UPNSkillComponent::CreateNode(const FAttackData* InComboData)

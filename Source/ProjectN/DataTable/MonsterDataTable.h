@@ -4,6 +4,7 @@
 #include "PNDataTable.h"
 #include "MonsterDataTable.Generated.h"
 
+class UPNActorGameData;
 struct FAIDataTable;
 
 USTRUCT()
@@ -13,12 +14,15 @@ struct FMonsterDataTable : public FPNDataTable
 
 public:
 	const FAIDataTable* GetAIDataTable(const UObject* WorldContextObject) const;
-	FORCEINLINE FName GetWeaponItemKey() const { return WeaponItemKey; }
+	const UPNActorGameData* GetMonsterGameData() const;
+	
+private:
+	virtual void PostLoadDataTable() override final;
 
 private:
 	UPROPERTY(EditDefaultsOnly)
 	FName AIDataTableKey;
 	
 	UPROPERTY(EditDefaultsOnly)
-	FName WeaponItemKey;
+	FSoftObjectPath MonsterGameDataPath;
 };

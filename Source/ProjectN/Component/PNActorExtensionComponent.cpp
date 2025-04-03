@@ -8,7 +8,9 @@
 #include "PNCommonModule.h"
 #include "AbilitySystem/PNAbilitySet.h"
 #include "AbilitySystem/PNAbilitySystemComponent.h"
+#include "DataTable/MonsterDataTable.h"
 #include "Engine/AssetManager.h"
+#include "Subsystem/PNGameDataSubsystem.h"
 
 UPNActorExtensionComponent::UPNActorExtensionComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -74,36 +76,38 @@ void UPNActorExtensionComponent::InitializeComponent()
 	Super::InitializeComponent();
 
 	const UAssetManager& AssetManager = UAssetManager::Get();
-	FName ActorGameDataFileName;
+	
 
 	switch (ActorType)
 	{
 	case EActorType::Player:
 		{
-			ActorGameDataFileName = TEXT("PlayerGameData");
+			const FName ActorGameDataFileName = TEXT("PlayerGameData");
+			FSoftObjectPtr AssetPtr(AssetManager.GetPrimaryAssetPath(FPrimaryAssetId(FName(TEXT("ActorGameData")), ActorGameDataFileName)));
+			if (AssetPtr.IsPending())
+			{
+				AssetPtr.LoadSynchronous();
+			}
+
+			ActorGameData = Cast<UPNActorGameData>(AssetPtr.Get());
+			check(ActorGameData);
+			
 			break;
 		}
-	case EActorType::NPC:
-		{
-			ActorGameDataFileName = TEXT("TestGameData");
-			break;
-		}
+		
+	case EActorType::Monster:
+	{
+		// Todo. RowName은 임시, 추후 스폰될 때 추가돼야 함
+		const FName MonsterDataTableRowName = TEXT("0");
+		const FMonsterDataTable* MonsterDataTable = UPNGameDataSubsystem::Get(GetWorld())->GetData<FMonsterDataTable>(TEXT("0"));
+		check(MonsterDataTable);
+		
+		ActorGameData = MonsterDataTable->GetMonsterGameData();
+	}
 	default:
 		{
 			break;
 		}
-	}
-
-	if (!ActorGameDataFileName.IsNone())
-	{
-		FSoftObjectPtr AssetPtr(AssetManager.GetPrimaryAssetPath(FPrimaryAssetId(FName(TEXT("ActorGameData")), ActorGameDataFileName)));
-		if (AssetPtr.IsPending())
-		{
-			AssetPtr.LoadSynchronous();
-		}
-
-		ActorGameData = Cast<UPNActorGameData>(AssetPtr.Get());
-		check(ActorGameData);
 	}
 	
 	if (IsServerActor(GetOwner()) && ActorType < EActorType::Player)

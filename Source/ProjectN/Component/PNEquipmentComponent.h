@@ -18,7 +18,7 @@ public:
 	void RequestEquip(const FName ItemKey);
 	void RequestUnEquip(const EEquipSlotType UnEquipSlotType);
 	
-	FName GetEquipItemDataTableIndex(const EEquipSlotType EquipSlotType) const;
+	UClass* GetWeaponAttributeSetClass() const;
 
 private:
 	UPNEquipmentComponent(const FObjectInitializer& ObjectInitializer);
@@ -35,6 +35,8 @@ private:
 	void ClientNotifyEquip(const FName ItemKey);
 	
 	void UnEquip(EEquipSlotType UnEquipSlotType);
+	
+	FName GetEquipItemDataTableIndex(const EEquipSlotType EquipSlotType) const;
 	
 private:
 	TMap<EEquipSlotType, FName> EquipSlots;

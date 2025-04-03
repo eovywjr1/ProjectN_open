@@ -9,15 +9,16 @@
 
 bool UPNBTDecorator_InRange::CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const
 {
-	const float TempInRange = 2.0f * Meter;
-
 	if (UObject* Enemy = OwnerComp.GetBlackboardComponent()->GetValueAsObject(BBKEY_ENEMY))
 	{
 		AActor* EnemyCast = Cast<AActor>(Enemy);
 		AActor* Owner = OwnerComp.GetOwner();
 
-		return Owner->GetDistanceTo(EnemyCast) <= TempInRange;
+		const float Distance =  Owner->GetDistanceTo(EnemyCast);
+		const float TempInRange = 10.0f * Meter;
+
+		return Distance <= TempInRange;
 	}
 
-	return true;
+	return false;
 }

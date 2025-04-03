@@ -12,7 +12,9 @@ enum class EStatusType : uint8;
 UENUM()
 enum class EUIControllerID : uint8
 {
-	HUD
+	InValid,
+	HUD,
+	Inventory
 };
 
 USTRUCT()

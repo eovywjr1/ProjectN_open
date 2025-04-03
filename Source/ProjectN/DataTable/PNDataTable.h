@@ -12,4 +12,9 @@ struct FPNDataTable : public FTableRowBase
 
 public:
 	virtual void PostLoadDataTable() {}
+
+	FORCEINLINE void SetRowName(const FName InRowName) { RowName = InRowName; }
+
+protected:
+	FName RowName;
 };

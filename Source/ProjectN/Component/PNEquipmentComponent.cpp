@@ -36,6 +36,26 @@ FName UPNEquipmentComponent::GetEquipItemDataTableIndex(const EEquipSlotType Equ
 	return EquipSlots[EquipSlotType];
 }
 
+UClass* UPNEquipmentComponent::GetWeaponAttributeSetClass() const
+{
+	FName EquipItemDataTableIndex = GetEquipItemDataTableIndex(EEquipSlotType::Weapon);
+	check(EquipItemDataTableIndex != NAME_None)
+
+	const FItemDataTable* ItemDataTable = UPNGameDataSubsystem::Get(GetWorld())->GetData<FItemDataTable>(EquipItemDataTableIndex);
+	check(ItemDataTable);
+
+	const FEquipmentDataTable* EquipmentDataTable = UPNGameDataSubsystem::Get(GetWorld())->GetData<FEquipmentDataTable>(ItemDataTable->GetEquipmentKey());
+	check(EquipmentDataTable)
+
+	UClass* WeaponAttributeSetClass = EquipmentDataTable->GetWeaponAttributeSetClass();
+	if (WeaponAttributeSetClass == nullptr)
+	{
+		return nullptr;
+	}
+	
+	return WeaponAttributeSetClass;
+}
+
 UPNEquipmentComponent::UPNEquipmentComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {

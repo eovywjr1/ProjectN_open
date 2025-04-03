@@ -3,11 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "UPNUserWidget.h"
 #include "APNUIController.generated.h"
 
 UCLASS()
-class PROJECTN_API UAPNUIController : public UUserWidget
+class PROJECTN_API UAPNUIController : public UUPNUserWidget
 {
 	GENERATED_BODY()
 	

@@ -33,6 +33,4 @@ private:
 	
 private:
 	float RunTargetRotationYaw = 0.0f;
-	
-	bool bDisableMove = false;
 };

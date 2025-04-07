@@ -2,9 +2,9 @@
 
 #include "CoreMinimal.h"
 #include "PNDataTable.h"
+#include "Actor/PNPawnGameData.h"
 #include "MonsterDataTable.Generated.h"
 
-class UPNActorGameData;
 struct FAIDataTable;
 
 USTRUCT()
@@ -14,7 +14,7 @@ struct FMonsterDataTable : public FPNDataTable
 
 public:
 	const FAIDataTable* GetAIDataTable(const UObject* WorldContextObject) const;
-	const UPNActorGameData* GetMonsterGameData() const;
+	UPNPawnGameData* GetMonsterGameData() const;
 	
 private:
 	virtual void PostLoadDataTable() override final;

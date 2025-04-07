@@ -7,7 +7,7 @@
 #include "AbilitySystem/PNAbilitySystemComponent.h"
 #include "AbilitySystem/AttributeSet/PNPawnAttributeSet.h"
 #include "Actor/PNCharacter.h"
-#include "Component/PNInventoryComponent.h"
+#include "Inventory/PNInventoryComponent.h"
 
 void UPNCheatManager::AddItem(FName ItemKey, const uint8 Count)
 {

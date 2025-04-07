@@ -4,8 +4,8 @@
 #include "PNActorExtensionComponent.h"
 
 #include "PNAbilitySystemUserInterface.h"
-#include "PNActorGameData.h"
 #include "PNCommonModule.h"
+#include "Actor/PNActorGameData.h"
 #include "AbilitySystem/PNAbilitySet.h"
 #include "AbilitySystem/PNAbilitySystemComponent.h"
 #include "DataTable/MonsterDataTable.h"
@@ -76,7 +76,6 @@ void UPNActorExtensionComponent::InitializeComponent()
 	Super::InitializeComponent();
 
 	const UAssetManager& AssetManager = UAssetManager::Get();
-	
 
 	switch (ActorType)
 	{
@@ -91,25 +90,23 @@ void UPNActorExtensionComponent::InitializeComponent()
 
 			ActorGameData = Cast<UPNActorGameData>(AssetPtr.Get());
 			check(ActorGameData);
-			
+
 			break;
 		}
-		
+
 	case EActorType::Monster:
-	{
-		// Todo. RowName은 임시, 추후 스폰될 때 추가돼야 함
-		const FName MonsterDataTableRowName = TEXT("0");
-		const FMonsterDataTable* MonsterDataTable = UPNGameDataSubsystem::Get(GetWorld())->GetData<FMonsterDataTable>(TEXT("0"));
-		check(MonsterDataTable);
-		
-		ActorGameData = MonsterDataTable->GetMonsterGameData();
-	}
+		{
+			const FMonsterDataTable* MonsterDataTable = UPNGameDataSubsystem::Get(GetWorld())->GetData<FMonsterDataTable>(TEXT("0"));
+			check(MonsterDataTable);
+
+			ActorGameData = Cast<UPNActorGameData>(MonsterDataTable->GetMonsterGameData());
+		}
 	default:
 		{
 			break;
 		}
 	}
-	
+
 	if (IsServerActor(GetOwner()) && ActorType < EActorType::Player)
 	{
 		InitializeAbilitySystem(nullptr, GetOwner());

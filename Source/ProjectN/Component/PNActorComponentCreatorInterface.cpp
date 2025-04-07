@@ -7,7 +7,7 @@
 #include "PNDetectComponent.h"
 #include "PNEquipmentComponent.h"
 #include "PNInteractionComponent.h"
-#include "PNInventoryComponent.h"
+#include "Inventory/PNInventoryComponent.h"
 #include "PNPawnSensingComponent.h"
 #include "PNPlayerInputComponent.h"
 #include "PNSkillComponent.h"

@@ -197,19 +197,20 @@ void UPNGameplayAbility_Attack::AttackHitCheck()
 		}
 	}
 
-	const UPNWeaponAttributeSet* WeaponAttributeSet = GetAbilitySystemComponentFromActorInfo()->GetSet<UPNWeaponAttributeSet>();
-	check(WeaponAttributeSet);
-	FHitBoxData AttackHitBoxData;
-	if (!WeaponAttributeSet->GetAttackHitBoxData(AttackTag, AttackHitBoxData))
+	if (const UPNWeaponAttributeSet* WeaponAttributeSet = GetAbilitySystemComponentFromActorInfo()->GetSet<UPNWeaponAttributeSet>())
 	{
-		UE_LOG(LogPN, Warning, TEXT("무기 AttributeSet에 %s 태그의 공격 어빌리티의 판정 범위 데이터가 없습니다."), *AttackTag.ToString());
-	}
+		FHitBoxData AttackHitBoxData;
+		if (!WeaponAttributeSet->GetAttackHitBoxData(AttackTag, AttackHitBoxData))
+		{
+			UE_LOG(LogPN, Warning, TEXT("무기 AttributeSet에 %s 태그의 공격 어빌리티의 판정 범위 데이터가 없습니다."), *AttackTag.ToString());
+		}
 
-	if (TargetActorHitCheckClass)
-	{
-		UPNAbilityTask_TraceToPawn* AttackTraceTask = UPNAbilityTask_TraceToPawn::CreateTask(this, TargetActorHitCheckClass, AttackHitBoxData);
-		AttackTraceTask->OnComplete.AddUObject(this, &ThisClass::OnAttackHitTraceResultCallback);
-		AttackTraceTask->ReadyForActivation();
+		if (TargetActorHitCheckClass)
+		{
+			UPNAbilityTask_TraceToPawn* AttackTraceTask = UPNAbilityTask_TraceToPawn::CreateTask(this, TargetActorHitCheckClass, AttackHitBoxData);
+			AttackTraceTask->OnComplete.AddUObject(this, &ThisClass::OnAttackHitTraceResultCallback);
+			AttackTraceTask->ReadyForActivation();
+		}
 	}
 }
 

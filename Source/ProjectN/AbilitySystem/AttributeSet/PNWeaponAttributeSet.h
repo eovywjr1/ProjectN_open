@@ -8,40 +8,10 @@
 #include "AbilitySystem/AttributeSet/PNAttributeSet.h"
 #include "PNWeaponAttributeSet.generated.h"
 
-USTRUCT()
-struct FAttackData
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditDefaultsOnly)
-	FGameplayTag AttackTag;
-	
-	UPROPERTY(EditDefaultsOnly)
-	TObjectPtr<UAnimMontage> AttackActionMontage = nullptr;
-	
-	UPROPERTY(EditDefaultsOnly)
-	FName SkillDataTableIndex = NAME_None;
-	
-	UPROPERTY(EditDefaultsOnly)
-	FName AttackActionMontageSectionName = NAME_None;
-};
-
-USTRUCT()
-struct FComboData
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditDefaultsOnly)
-	TArray<FAttackData> ComboAttackDatas;
-};
-
 /**
  * 
  */
 
-// Todo. WeaponData 혹은 EquipmentData로 변경해야 함
 UCLASS()
 class PROJECTN_API UPNWeaponAttributeSet : public UPNAttributeSet
 {
@@ -53,7 +23,7 @@ public:
 	ATTRIBUTE_ACCESSORS(UPNWeaponAttributeSet, WeaponDamage);
 
 	bool GetAttackHitBoxData(FGameplayTag AbilityTag, FHitBoxData& OutAttackHitBoxData) const;
-	FORCEINLINE const TArray<FComboData>& GetComboDatas() const { return ComboDatas; }
+	FORCEINLINE const TArray<FComboData>* GetComboDatas() const { return &ComboDatas; }
 
 private:
 	UPROPERTY(EditDefaultsOnly)

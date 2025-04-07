@@ -9,7 +9,7 @@ public class ProjectN : ModuleRules
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
 		PublicDependencyModuleNames.AddRange(new string[]
-			{ "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "EnhancedInput", "ModularGameplay", "AIModule" });
+			{ "Core", "CoreUObject", "Engine", "InputCore", "NetCore", "HeadMountedDisplay", "EnhancedInput", "ModularGameplay", "AIModule" });
 
 		PrivateIncludePaths.AddRange(new string[] { "ProjectN" });
 		

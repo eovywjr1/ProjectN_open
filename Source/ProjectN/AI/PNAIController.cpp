@@ -6,6 +6,7 @@
 #include "PNAI.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Component/PNDetectComponent.h"
+#include "Component/PNSkillComponent.h"
 #include "DataTable/AIDataTable.h"
 #include "DataTable/MonsterDataTable.h"
 #include "Subsystem/PNGameDataSubsystem.h"
@@ -47,5 +48,10 @@ void APNAIController::OnPossess(APawn* InPawn)
 	if (UPNDetectComponent* DetectComponent = GetPawn()->FindComponentByClass<UPNDetectComponent>())
 	{
 		DetectComponent->OnDetectedDelegate.AddUObject(this, &ThisClass::OnDetectedEnemy);
+	}
+	
+	if (UPNSkillComponent* SkillComponent = GetPawn()->FindComponentByClass<UPNSkillComponent>())
+	{
+		SkillComponent->OnAIPossessed();
 	}
 }

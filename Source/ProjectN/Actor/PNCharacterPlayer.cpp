@@ -3,10 +3,11 @@
 
 #include "Actor/PNCharacterPlayer.h"
 
+#include "PNActorGameData.h"
 #include "AbilitySystem/PNAbilitySystemComponent.h"
 #include "Component/PNEnhancedInputComponent.h"
-#include "Component/PNPlayerInputComponent.h"
 #include "Component/PNActorExtensionComponent.h"
+#include "Engine/AssetManager.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Player/PNPlayerState.h"
 
@@ -65,13 +66,6 @@ void APNCharacterPlayer::OnRep_PlayerState()
 	InitializeAbilitySystemComponent();
 }
 
-void APNCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	FindComponentByClass<UPNPlayerInputComponent>()->InitializePlayerInput(InputComponent);
-}
-
 void APNCharacterPlayer::InitializeAbilitySystemComponent()
 {
 	APNPlayerState* PlayerStateCast = GetPlayerState<APNPlayerState>();
@@ -79,6 +73,21 @@ void APNCharacterPlayer::InitializeAbilitySystemComponent()
 
 	UAbilitySystemComponent* AbilitySystemComponent = PlayerStateCast->GetAbilitySystemComponent();
 	ActorExtensionComponent->InitializeAbilitySystem(Cast<UPNAbilitySystemComponent>(AbilitySystemComponent), PlayerStateCast);
+}
+
+UPNActorGameData* APNCharacterPlayer::GetActorGameData() const
+{
+	const FName ActorGameDataFileName = TEXT("PlayerGameData");
+	const UAssetManager& AssetManager = UAssetManager::Get();
+	FSoftObjectPtr AssetPtr(AssetManager.GetPrimaryAssetPath(FPrimaryAssetId(FName(TEXT("ActorGameData")), ActorGameDataFileName)));
+	if (AssetPtr.IsPending())
+	{
+		AssetPtr.LoadSynchronous();
+	}
+
+	UPNActorGameData* ActorGameData = Cast<UPNActorGameData>(AssetPtr.Get());
+	
+	return ActorGameData;
 }
 
 void APNCharacterPlayer::MoveByInput(const FVector2D MovementVector)

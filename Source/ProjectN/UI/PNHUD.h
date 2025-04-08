@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "PNCommonModule.h"
 #include "GameFramework/HUD.h"
 #include "PNHUD.generated.h"
 
@@ -43,6 +42,8 @@ DECLARE_MULTICAST_DELEGATE(GameEvent_OnDeactivatedLockOnDelegate);
 DECLARE_MULTICAST_DELEGATE_TwoParams(GameEvent_OnDetectedInteractableActorDelegate, const FObjectKey, const FName);
 DECLARE_MULTICAST_DELEGATE(GameEvent_OnUnDetectedInteractableActorDelegate);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FGameEvent_OnUpdateInventoryDelegate);
+
 /**
  * 
  */
@@ -57,6 +58,11 @@ public:
 
 	GameEvent_OnDetectedInteractableActorDelegate OnDetectedInteractableActorDelegate;
 	GameEvent_OnUnDetectedInteractableActorDelegate OnUnDetectedInteractableActorDelegate;
+
+	UPROPERTY(BlueprintAssignable)
+	FGameEvent_OnUpdateInventoryDelegate OnUpdateInventoryDelegate;
+
+	void ToggleInventory();
 	
 private:
 	virtual void BeginPlay() override final;

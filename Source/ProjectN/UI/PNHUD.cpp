@@ -4,6 +4,16 @@
 #include "UI/PNHUD.h"
 
 #include "Blueprint/UserWidget.h"
+#include "Inventory/PNInventoryUIController.h"
+
+void APNHUD::ToggleInventory()
+{
+	FUIControllerData* InventoryControllerData = Controllers.Find(EUIControllerID::Inventory);
+	check(InventoryControllerData);
+	
+	UPNInventoryUIController* InventoryController = Cast<UPNInventoryUIController>(InventoryControllerData->Controller);
+	InventoryController->ToggleVisibility();
+}
 
 void APNHUD::BeginPlay()
 {

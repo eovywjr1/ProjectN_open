@@ -6,7 +6,7 @@
 #include "PNGameplayTags.h"
 #include "PNLogChannels.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
-#include "Component/PNPlayerInputComponent.h"
+#include "Player/PNPlayerController.h"
 
 UPNGameplayAbility_Roll::UPNGameplayAbility_Roll()
 {
@@ -20,13 +20,10 @@ void UPNGameplayAbility_Roll::ActivateAbility(const FGameplayAbilitySpecHandle H
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	UPNPlayerInputComponent* PlayerInputComponent = GetAvatarActorFromActorInfo()->FindComponentByClass<UPNPlayerInputComponent>();
-	if (PlayerInputComponent == nullptr)
+	if (APNPlayerController* PlayerController = Cast<APNPlayerController>(Cast<APawn>(GetAvatarActorFromActorInfo())->Controller))
 	{
-		return;
+		PlayerController->EnableControlInput(false);
 	}
-
-	PlayerInputComponent->EnableControlInput(false);
 
 	if (RollActionMontage)
 	{
@@ -45,19 +42,10 @@ void UPNGameplayAbility_Roll::EndAbility(const FGameplayAbilitySpecHandle Handle
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 
-	AActor* AvatarActor = ActorInfo->AvatarActor.Get();
-	if (AvatarActor == nullptr)
+	if (APNPlayerController* PlayerController = Cast<APNPlayerController>(Cast<APawn>(GetAvatarActorFromActorInfo())->Controller))
 	{
-		return;
+		PlayerController->EnableControlInput(true);
 	}
-
-	UPNPlayerInputComponent* PlayerInputComponent = AvatarActor->FindComponentByClass<UPNPlayerInputComponent>();
-	if (PlayerInputComponent == nullptr)
-	{
-		return;
-	}
-
-	PlayerInputComponent->EnableControlInput(true);
 }
 
 void UPNGameplayAbility_Roll::OnCompleteCallback()

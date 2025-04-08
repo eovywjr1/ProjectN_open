@@ -5,12 +5,10 @@
 
 #include "PNAbilitySystemUserInterface.h"
 #include "PNCommonModule.h"
-#include "Actor/PNActorGameData.h"
 #include "AbilitySystem/PNAbilitySet.h"
 #include "AbilitySystem/PNAbilitySystemComponent.h"
-#include "DataTable/MonsterDataTable.h"
-#include "Engine/AssetManager.h"
-#include "Subsystem/PNGameDataSubsystem.h"
+#include "Actor/PNActorGameData.h"
+#include "Actor/PNCharacter.h"
 
 UPNActorExtensionComponent::UPNActorExtensionComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -75,40 +73,12 @@ void UPNActorExtensionComponent::InitializeComponent()
 {
 	Super::InitializeComponent();
 
-	const UAssetManager& AssetManager = UAssetManager::Get();
+	// 현재는 캐릭터만 존재하므로 캐릭터에 인터페이스를 추가, Actor가 필요하다면 Actor로 인터페이스를 이동할 계획
+	APNCharacter* Owner = Cast<APNCharacter>(GetOwner());
+	ActorGameData = Owner->GetActorGameData();
 
-	switch (ActorType)
+	if (IsServerActor(Owner) && ActorType < EActorType::Player)
 	{
-	case EActorType::Player:
-		{
-			const FName ActorGameDataFileName = TEXT("PlayerGameData");
-			FSoftObjectPtr AssetPtr(AssetManager.GetPrimaryAssetPath(FPrimaryAssetId(FName(TEXT("ActorGameData")), ActorGameDataFileName)));
-			if (AssetPtr.IsPending())
-			{
-				AssetPtr.LoadSynchronous();
-			}
-
-			ActorGameData = Cast<UPNActorGameData>(AssetPtr.Get());
-			check(ActorGameData);
-
-			break;
-		}
-
-	case EActorType::Monster:
-		{
-			const FMonsterDataTable* MonsterDataTable = UPNGameDataSubsystem::Get(GetWorld())->GetData<FMonsterDataTable>(TEXT("0"));
-			check(MonsterDataTable);
-
-			ActorGameData = Cast<UPNActorGameData>(MonsterDataTable->GetMonsterGameData());
-		}
-	default:
-		{
-			break;
-		}
-	}
-
-	if (IsServerActor(GetOwner()) && ActorType < EActorType::Player)
-	{
-		InitializeAbilitySystem(nullptr, GetOwner());
+		InitializeAbilitySystem(nullptr, Owner);
 	}
 }

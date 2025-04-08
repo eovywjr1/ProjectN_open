@@ -9,7 +9,6 @@
 #include "PNInteractionComponent.h"
 #include "Inventory/PNInventoryComponent.h"
 #include "PNPawnSensingComponent.h"
-#include "PNPlayerInputComponent.h"
 #include "PNSkillComponent.h"
 #include "PNStatusActorComponent.h"
 
@@ -62,9 +61,6 @@ void IPNActorComponentCreatorInterface::CreateActorComponent(EActorType ActorTyp
 
 		if (IsClientActor(SelfActor))
 		{
-			UPNPlayerInputComponent* PNPlayerInputComponent = NewObject<UPNPlayerInputComponent>(SelfActor, TEXT("PlayerInputComponent"));
-			PNPlayerInputComponent->RegisterComponent();
-			
 			UPNDetectComponent* DetectComponent = NewObject<UPNDetectComponent>(SelfActor, TEXT("DetectComponent"));
 			DetectComponent->RegisterComponent();
 		}

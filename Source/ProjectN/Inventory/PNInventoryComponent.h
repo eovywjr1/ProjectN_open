@@ -40,6 +40,8 @@ public:
 	void RequestRemoveItem(const FName ItemKey, const uint8 Count);
 	void RequestUseItem(const FName ItemKey, const uint8 Count);
 
+	const TArray<FPNInventorySlot>& GetSlots() const { return Slots; }
+
 private:
 	UPNInventoryComponent();
 

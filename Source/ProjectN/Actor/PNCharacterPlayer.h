@@ -27,9 +27,9 @@ private:
 	virtual void PossessedBy(AController* NewController) override final;
 	virtual void OnRep_PlayerState() override final;
 	
-	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
-	
 	void InitializeAbilitySystemComponent();
+	
+	virtual UPNActorGameData* GetActorGameData() const override final;
 	
 private:
 	float RunTargetRotationYaw = 0.0f;

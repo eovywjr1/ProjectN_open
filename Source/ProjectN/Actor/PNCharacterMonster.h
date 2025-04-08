@@ -18,4 +18,6 @@ private:
 	APNCharacterMonster();
 	
 	virtual void PreInitializeComponents() override final;
+	
+	virtual UPNActorGameData* GetActorGameData() const override final;
 };

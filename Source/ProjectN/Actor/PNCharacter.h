@@ -8,6 +8,7 @@
 #include "Interface/PNAbilitySystemInterface.h"
 #include "PNCharacter.generated.h"
 
+class UPNActorGameData;
 class UPNActorExtensionComponent;
 
 UCLASS(config=Game)
@@ -20,6 +21,8 @@ public:
 
 	bool IsPlayer() const;
 	bool IsRun() const;
+	
+	virtual UPNActorGameData* GetActorGameData() const { return nullptr; }
 
 	void SetMaxWalkSpeed(const float InMaxSpeed);
 	float GetMaxWalkSpeed() const;

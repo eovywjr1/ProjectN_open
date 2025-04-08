@@ -3,9 +3,10 @@
 
 #include "PNInventoryComponent.h"
 
+#include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "Net/Core/PushModel/PushModel.h"
-#include "Subsystem/PNGameDataSubsystem.h"
+#include "UI/PNHUD.h"
 
 FPNInventorySlot::FPNInventorySlot()
 	: ItemKey(NAME_None),
@@ -81,8 +82,8 @@ UPNInventoryComponent::UPNInventoryComponent()
 {
 	SetIsReplicatedByDefault(true);
 
-	// Todo. 최대슬롯 20은 임시, 추후 정해야 함
-	const uint8 InventorySlotCount = 20;
+	// Todo. 최대슬롯 임시, 추후 정해야 함
+	const uint8 InventorySlotCount = 50;
 	Slots.Reserve(InventorySlotCount);
 }
 
@@ -141,8 +142,9 @@ uint8 UPNInventoryComponent::RemoveItem(FPNInventorySlot* ItemSlot, const uint8 
 
 void UPNInventoryComponent::OnRep_Slots()
 {
-	// Todo. UpdateUI
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, TEXT("디버그 메시지"));
+	APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	APNHUD* HUD = Cast<APNHUD>(PlayerController->GetHUD());
+	HUD->OnUpdateInventoryDelegate.Broadcast();
 }
 
 bool UPNInventoryComponent::IsValidItem(const FName ItemKey) const
